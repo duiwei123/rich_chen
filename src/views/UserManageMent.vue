@@ -24,7 +24,7 @@
 
       <el-table :data="users" style="width: 100%">
         <el-table-column prop="ID" label="ID" width="180"></el-table-column>
-        <el-table-column prop="Username" label="姓名" width="180"></el-table-column>
+        <el-table-column prop="Username" label="姓名1" width="180"></el-table-column>
         <el-table-column prop="email" label="邮箱"></el-table-column>
       </el-table>
     </el-main>
