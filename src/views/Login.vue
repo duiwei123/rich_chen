@@ -6,10 +6,12 @@
     <el-main>
       <el-form :model="loginForm" :rules="rules" ref="loginForm" label-width="100px">
         <el-form-item label="用户名" prop="username">
-          <el-input v-model="loginForm.username"></el-input>
+          <!-- 监听用户名输入框的 keyup.enter 事件 -->
+          <el-input v-model="loginForm.username" @keyup.enter="onSubmit"></el-input>
         </el-form-item>
         <el-form-item label="密码" prop="password">
-          <el-input type="password" v-model="loginForm.password"></el-input>
+          <!-- 监听密码输入框的 keyup.enter 事件 -->
+          <el-input type="password" v-model="loginForm.password" @keyup.enter="onSubmit"></el-input>
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="onSubmit">登录</el-button>
@@ -46,9 +48,9 @@ export default {
           // 模拟登录请求
           http.post('/login', this.loginForm).then((response) => {
             // 假设登录成功，返回 token
-            console.log(response.token)
             const token = response.token;
             localStorage.setItem('token', token);
+            localStorage.setItem('name', response.name)
             this.$router.push('/');
           });
         } else {

@@ -1,40 +1,248 @@
 <template>
   <el-container>
-    <el-header v-if="!isLoginPage">
-      <el-menu mode="horizontal" router>
+    <!-- 侧边栏 -->
+    <el-aside class="app-el-aside" v-if="!isLoginPage" width="200px">
+      <el-menu
+        mode="vertical"
+        router
+        default-active="/"
+        class="el-menu-vertical-demo noRightBorder app-el-menu"
+      >
+        <el-menu-item class="logo">LOGO</el-menu-item>
         <el-menu-item index="/">首页</el-menu-item>
         <el-menu-item index="/user-management">用户管理</el-menu-item>
-
-        <el-menu-item @click="logOut" style="margin-left: auto;">退出</el-menu-item>
+        <el-menu-item @click="logOut">退出</el-menu-item>
       </el-menu>
-    </el-header>
-    <el-main>
-      <router-view></router-view>
-    </el-main>
+    </el-aside>
+
+    <!-- 主内容区域 -->
+    <el-container class="app-container">
+      <el-header class="header" v-if="!isLoginPage">
+        <div class="search">
+          <div @click="drawer = true" type="primary" style="margin-left: 16px">
+            <el-icon><Search /></el-icon> Search...
+          </div>
+        </div>
+        <div style="float: right">欢迎{{ name }}</div>
+      </el-header>
+      <el-main class="realMain">
+        <!-- 设置 direction 属性为 ttb 实现从上到下弹出 -->
+        <el-drawer v-model="drawer" :with-header="false" direction="ttb">
+          <!-- 搜索框 -->
+          <div style="padding: 20px; display: flex">
+            <el-input
+              v-model="searchQuery"
+              placeholder="已接入Deepseek，请输入搜索内容..."
+              clearable
+              @input="handleSearch"
+              style="flex: 0 0 92%; margin-right: 10px"
+            >
+              <template #prefix>
+                <el-icon><Search /></el-icon>
+              </template>
+            </el-input>
+            <el-button @click="search" style="flex: 0 0 8%">搜索</el-button>
+          </div>
+          <!-- 文本展示框 -->
+          <div style="padding: 0 20px; min-height: 200px;" ref="loadingTarget">
+            <el-card v-if="filteredText" class="text-display-box">
+              <p>{{ filteredText }}</p>
+            </el-card>
+            <el-card v-else class="text-display-box">
+              <p>{{ textData }}</p>
+            </el-card>
+          </div>
+        </el-drawer>
+        <router-view></router-view>
+      </el-main>
+    </el-container>
   </el-container>
 </template>
 
 <script>
+import http from "@utils/http";
+
 export default {
-  name: 'App',
+  data() {
+    return {
+      name: localStorage.getItem("name"),
+      drawer: false, // 控制抽屉的显示
+      searchQuery: "", // 搜索框的内容
+      textData: "", // 原始文本
+      loadingInstance: null // 加载实例
+    };
+  },
   computed: {
     // 计算属性，判断当前是否为登录页面
     isLoginPage() {
-      return this.$route.path === '/login';
-    }
+      return this.$route.path === "/login";
+    },
+    // 过滤后的文本
+    // filteredText() {
+    //   if (!this.searchQuery) return this.textData; // 如果没有输入，显示全部文本
+    //   const lowerCaseQuery = this.searchQuery.toLowerCase();
+    //   if (this.textData.toLowerCase().includes(lowerCaseQuery)) {
+    //     return this.textData; // 如果匹配，显示原始文本
+    //   }
+    //   return null; // 如果没有匹配，返回 null
+    // },
   },
-methods: {
-   logOut() {
-    console.log("清除token")
-    localStorage.setItem('token', null);
-    this.$router.push("/login")
-  }
-}
+  methods: {
+    logOut() {
+      console.log("清除token");
+      this.name = "";
+      localStorage.setItem("token", null);
+      localStorage.setItem("name", null);
+      this.$router.push("/login");
+    },
+    handleSearch() {
+      // 搜索逻辑
+      console.log("搜索内容:", this.searchQuery);
+    },
+    search() {
+      // 显示加载动画
+      this.loadingInstance = this.$loading({
+        target: this.$refs.loadingTarget,
+        text: '正在等待deepseek响应...',
+        spinner: '<div class="loading-dots"></div>',
+        background: 'rgba(0, 0, 0, 0.7)'
+      });
+
+      http.get("/getLoverWord?word=" + this.searchQuery).then((response) => {
+        this.textData = response.data;
+        // 隐藏加载动画
+        this.loadingInstance.close();
+      }).catch(() => {
+        // 隐藏加载动画（请求出错时也隐藏）
+        this.loadingInstance.close();
+      });
+    },
+  },
+  created() {},
 };
 </script>
 
 <style>
+.el-loading-spinner .el-loading-text {
+  color: #fff!important;
+}
+.circular{
+ border: 1px solid #fff;
+}
+
+.el-loading-spinner{
+  top: 37%!important;
+}
+
+.text-display-box {
+  /* 可以根据需要添加卡片样式 */
+  min-height: 200px; /* 增加文本展示框的最小高度 */
+}
+
+/* 确保加载文字和图标正常显示 */
+.el-loading-mask {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.el-drawer {
+  height: 50% !important;
+}
+.text-display-box {
+  background-color: #f5f7fa;
+  border-radius: 4px;
+  padding: 20px;
+  margin-top: 10px;
+}
+
+.search {
+  color: var(--el-text-color-placeholder);
+  cursor: default;
+}
+
+.el-input__wrapper {
+  box-shadow: none !important;
+}
+.search {
+  float: left;
+  width: 500px;
+}
+.logo {
+  margin: 20px 0 !important;
+}
+.app-el-menu {
+  background: none !important;
+}
+.is-active {
+  border-radius: 20px 0 0 20px;
+}
+.app-el-aside {
+  margin-left: 15px;
+}
+.app-container {
+  background: #fff;
+  margin: 15px 15px 15px 0;
+  border-radius: 10px;
+}
+
+.header {
+  border-radius: 15px 15px 0 0;
+}
+
+.noRightBorder {
+  border-right: 0 !important;
+}
+#app {
+  background: #20a2a2;
+}
+
 .el-header {
-  padding: 0;
+  line-height: 60px;
+  background: #ffffff;
+}
+
+body {
+  margin: 0;
+}
+.el-menu-item {
+  color: #ffffff !important;
+  background-color: #20a2a2;
+}
+.el-menu-item:hover {
+  color: #263445 !important;
+  border-radius: 20px 0 0 20px;
+}
+
+.is-active {
+  border-radius: 20px 0 0 20px;
+  /* background-color: #C4F5FC!important; */
+  background-color: #fff !important;
+  color: #20a2a2 !important;
+}
+.el-aside {
+  background-color: #20a2a2;
+  color: #fff;
+  height: 100vh;
+}
+
+.el-menu-vertical-demo {
+  border-right: none;
+}
+
+.el-menu-item {
+  color: #fff;
+}
+
+.el-menu-item:hover {
+  background-color: #263445;
+}
+
+.realMain {
+  padding: 0px;
+  background: #fff;
+  margin: 0px 10px 0 10px;
+}
+.el-main {
+  padding: 0 !important;
 }
 </style>

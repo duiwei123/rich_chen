@@ -6,7 +6,7 @@ import router from '../router';
 // 创建 Axios 实例
 const http = axios.create({
   baseURL: 'http://localhost:8080', // 你的 API 地址
-  timeout: 10000, // 请求超时时间
+  timeout: 60000, // 请求超时时间
 });
 
 // 请求拦截器
@@ -14,7 +14,6 @@ http.interceptors.request.use(
   (config) => {
     // 在请求发送之前做一些处理，比如添加 token
     const token = localStorage.getItem('token');
-    console.log("sadasdsa"+token)
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
