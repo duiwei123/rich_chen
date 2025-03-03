@@ -69,7 +69,7 @@ export default {
       drawer: false, // 控制抽屉的显示
       searchQuery: "", // 搜索框的内容
       textData: "", // 原始文本
-      loadingInstance: null // 加载实例
+      loadingInstance: null, // 加载实例
     };
   },
   computed: {

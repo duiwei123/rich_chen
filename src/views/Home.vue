@@ -15,12 +15,14 @@
         <div class="littleCard"></div>
         <el-col :span="11">
           <el-card>
-            <el-button @click="getWeather"></el-button>
+            <img :src="weatherImg" alt="Weather Image" />
+            <p>{{ weatherData.LocalName }}市现在{{ weatherData.WeatherReal }}，气温{{ weatherData.Temperature }}℃</p>
+            <p>{{ suggestion }}</p>
           </el-card>
         </el-col>
         <el-col :span="2"></el-col>
         <el-col :span="11">
-          <el-card>
+          <el-card class="calendar">
             <el-calendar v-model="value">
               <template #date-cell="{ data }">
                 <div class="calendar-cell">
@@ -34,7 +36,12 @@
                       class="event-dot"
                       :style="{ backgroundColor: item.color || '#409EFF' }"
                     ></div>
-                    <span style="font-size: 10;" :style="{ color: item.color || '#409EFF' }" class="event-text">￥{{ item.content }}</span>
+                    <span
+                      style="font-size: 10"
+                      :style="{ color: item.color || '#409EFF' }"
+                      class="event-text"
+                      >￥{{ item.content }}</span
+                    >
                   </div>
                 </div>
               </template>
@@ -48,6 +55,10 @@
   
   <script>
 import http from "../utils/http";
+
+function getUrl(url) {
+  return import(/* @vite-ignore */'/src/assets/weatherIco/'+ url +'-1x.png')
+}
 export default {
   data() {
     return {
@@ -61,10 +72,15 @@ export default {
       //     { date: "2023-10-01", content: "国庆节", color: "#f00" }
       //   ]
       // }
+      weatherData: {},
+      suggestion: '',
+      weatherImg: "",
     };
   },
   mounted() {
     this.fetchCalendarData();
+    this.getWeather()
+    this.getSuggestion()
   },
   methods: {
     goToUserManagement() {
@@ -82,15 +98,35 @@ export default {
         console.error("获取用户数据失败", error);
       }
     },
-    getWeather() {
-      http.get("/getWeather");
-    }, // 获取日历数据
+    async getWeather() {
+      const response = await http.get("/getWeather");
+      this.weatherData = response.data;
+
+      if (!this.weatherData.WeatherCode) {
+        return;
+      }
+      const weatherCode = this.weatherData.WeatherCode;
+      try {
+        const module = await  getUrl(weatherCode)
+        this.weatherImg = module.default;
+      } catch (error) {
+        console.error('加载图片出错:', error);
+      }
+    },
+    async getSuggestion() {
+      const response = await http.get("/getSuggestion")
+      var suggest = response.data.brief 
+      if(response.data.details) {
+        suggest + response.data.details
+      }
+      this.suggestion = suggest
+    },
     // 获取日历数据
     async fetchCalendarData() {
       try {
-        const response = await http.get("/getExpend"); // 修改为你的实际接口
-        console.log(response.data)
-        var list = [response.data] 
+        const response = await http.get("/getExpend");
+        console.log(response.data);
+        var list = [response.data];
         this.processCalendarData(list);
       } catch (error) {
         console.error("获取日历数据失败", error);
@@ -100,7 +136,7 @@ export default {
     // 处理原始数据
     processCalendarData(rawData) {
       this.calendarEvents = rawData.reduce((acc, item) => {
-        console.log(item)
+        console.log(item);
         const dateKey = item.date; // 确保接口返回的日期字段为date
         if (!acc[dateKey]) {
           acc[dateKey] = [];
@@ -119,6 +155,9 @@ export default {
 </script>
   
   <style scoped>
+  .calendar.el-card.is-always-shadow .el-card__body .el-calendar .el-calendar__body {
+    padding: 12px 20px 0px;
+  }
 .el-calendar {
   --el-calendar-cell-width: 50px;
 }
@@ -134,7 +173,7 @@ export default {
   text-align: center;
   line-height: 60px;
 }
-.event-text{
+.event-text {
   font-size: 10px;
 }
 </style>
