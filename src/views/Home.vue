@@ -52,8 +52,8 @@
     </el-main>
   </el-container>
 </template>
-  
-  <script>
+
+<script>
 import http from "../utils/http";
 
 function getUrl(url) {
@@ -64,14 +64,8 @@ export default {
     return {
       value: new Date(),
       loverWord: "",
-      // 存储日历事件数据
-      calendarEvents: {},
-      // 示例数据格式：
-      // {
-      //   "2023-10-01": [
-      //     { date: "2023-10-01", content: "国庆节", color: "#f00" }
-      //   ]
-      // }
+      // 存储日历事件数据，改为数组类型
+      calendarEvents: [],
       weatherData: {},
       suggestion: '',
       weatherImg: "",
@@ -126,36 +120,23 @@ export default {
       try {
         const response = await http.get("/getExpend");
         console.log(response.data);
-        var list = [response.data];
-        this.processCalendarData(list);
+        // 假设 response.data 是数组
+        this.calendarEvents = response.data;
       } catch (error) {
         console.error("获取日历数据失败", error);
       }
     },
 
-    // 处理原始数据
-    processCalendarData(rawData) {
-      this.calendarEvents = rawData.reduce((acc, item) => {
-        console.log(item);
-        const dateKey = item.date; // 确保接口返回的日期字段为date
-        if (!acc[dateKey]) {
-          acc[dateKey] = [];
-        }
-        acc[dateKey].push(item);
-        return acc;
-      }, {});
-    },
-
     // 获取某天的事件
     getDateEvents(dateString) {
-      return this.calendarEvents[dateString] || [];
+      return this.calendarEvents.filter(item => item.date === dateString);
     },
   },
 };
 </script>
   
   <style scoped>
-  .calendar.el-card.is-always-shadow .el-card__body .el-calendar .el-calendar__body {
+  .calendar .el-card__body .el-calendar .el-calendar__body {
     padding: 12px 20px 0px;
   }
 .el-calendar {
