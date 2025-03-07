@@ -51,6 +51,7 @@ export default {
             const token = response.token;
             localStorage.setItem('token', token);
             localStorage.setItem('name', response.name)
+            localStorage.setItem('headPhoto', response.headImg)
             this.$router.push('/');
           });
         } else {

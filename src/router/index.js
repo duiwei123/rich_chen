@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import Home from '../views/Home.vue';
 import UserManagement from '../views/UserManagement.vue';
+import Order from '../views/Order.vue';
 import Login from '../views/Login.vue';
 
 const routes = [
@@ -14,6 +15,12 @@ const routes = [
     path: '/user-management',
     name: 'UserManagement',
     component: UserManagement,
+    meta: { requiresAuth: true }, // 需要认证
+  },
+  {
+    path: '/order',
+    name: 'Order',
+    component: Order,
     meta: { requiresAuth: true }, // 需要认证
   },
   {

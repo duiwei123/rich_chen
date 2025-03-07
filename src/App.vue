@@ -11,6 +11,7 @@
         <el-menu-item class="logo">LOGO</el-menu-item>
         <el-menu-item index="/">首页</el-menu-item>
         <el-menu-item index="/user-management">用户管理</el-menu-item>
+        <el-menu-item index="/order">流水管理</el-menu-item>
         <el-menu-item @click="logOut">退出</el-menu-item>
       </el-menu>
     </el-aside>
@@ -23,7 +24,8 @@
             <el-icon><Search /></el-icon> Search...
           </div>
         </div>
-        <div style="float: right">欢迎{{ name }}</div>
+        <div style="float: right; height: 60px;"><span><img class="headPhoto" :src="headPhoto"></span>
+          <span style="font-size: 12px;">欢迎{{ name }}</span></div>
       </el-header>
       <el-main class="realMain">
         <!-- 设置 direction 属性为 ttb 实现从上到下弹出 -->
@@ -70,6 +72,7 @@ export default {
       searchQuery: "", // 搜索框的内容
       textData: "", // 原始文本
       loadingInstance: null, // 加载实例
+      headPhoto: localStorage.getItem("headPhoto")
     };
   },
   computed: {
@@ -123,6 +126,13 @@ export default {
 </script>
 
 <style>
+
+.headPhoto{
+  vertical-align: middle;
+    height: 25px;
+    border-radius: 15px;
+    margin-right: 5px;
+}
 .el-loading-spinner .el-loading-text {
   color: #fff!important;
 }
