@@ -24,8 +24,10 @@
             <el-icon><Search /></el-icon> Search...
           </div>
         </div>
-        <div style="float: right; height: 60px;"><span><img class="headPhoto" :src="headPhoto"></span>
-          <span style="font-size: 12px;">欢迎{{ name }}</span></div>
+        <div style="float: right; height: 60px">
+          <span><img class="headPhoto" :src="headPhoto" /></span>
+          <span style="font-size: 12px">欢迎{{ name }}</span>
+        </div>
       </el-header>
       <el-main class="realMain">
         <!-- 设置 direction 属性为 ttb 实现从上到下弹出 -->
@@ -46,7 +48,7 @@
             <el-button @click="search" style="flex: 0 0 8%">搜索</el-button>
           </div>
           <!-- 文本展示框 -->
-          <div style="padding: 0 20px; min-height: 200px;" ref="loadingTarget">
+          <div style="padding: 0 20px; min-height: 200px" ref="loadingTarget">
             <el-card v-if="filteredText" class="text-display-box">
               <p>{{ filteredText }}</p>
             </el-card>
@@ -63,6 +65,7 @@
 
 <script>
 import http from "@utils/http";
+import { EventSourcePolyfill } from 'event-source-polyfill';
 
 export default {
   data() {
@@ -72,7 +75,9 @@ export default {
       searchQuery: "", // 搜索框的内容
       textData: "", // 原始文本
       loadingInstance: null, // 加载实例
-      headPhoto: localStorage.getItem("headPhoto")
+      headPhoto: localStorage.getItem("headPhoto"),
+      messages: '',
+      eventSource: null,
     };
   },
   computed: {
@@ -90,6 +95,51 @@ export default {
     //   return null; // 如果没有匹配，返回 null
     // },
   },
+  mounted() {
+    const token = "Bearer " + localStorage.getItem("token"); // 替换为实际的token
+    const url = 'http://localhost:8080/sse';
+
+
+    // 创建EventSource对象，连接到服务端的SSE接口，并携带token
+    this.eventSource = new EventSourcePolyfill(url, {
+      headers: {
+        Authorization: token,
+      },
+      heartbeatTimeout: 120000, // 自定义配置
+    });
+    // 监听消息事件
+    this.eventSource.onmessage = (event) => {
+      console.log("eventdata是"+event.data)
+      if(event.data == 'heartbeat') {
+        return
+      }
+      this.message = event.data
+      this.$notific({
+        title: '新消息', // 标题
+        message: this.message, // 消息内容
+        type: 'info', // 类型：success/warning/info/error
+        position: 'bottom-right', // 显示位置
+        duration: 3000, // 自动关闭时间（毫秒）
+      });
+    };
+
+    // 监听错误事件
+    this.eventSource.onerror = (error) => {
+      console.error("EventSource failed:", error);
+    };
+  },
+  beforeDestroy() {
+    // 组件销毁前关闭EventSource连接
+    if (this.eventSource) {
+      this.eventSource.close();
+    }
+  },
+  beforeDestroy() {
+    // 组件销毁前关闭EventSource连接
+    if (this.eventSource) {
+      this.eventSource.close();
+    }
+  },
   methods: {
     logOut() {
       console.log("清除token");
@@ -106,19 +156,22 @@ export default {
       // 显示加载动画
       this.loadingInstance = this.$loading({
         target: this.$refs.loadingTarget,
-        text: '正在等待deepseek响应...',
+        text: "正在等待deepseek响应...",
         spinner: '<div class="loading-dots"></div>',
-        background: 'rgba(0, 0, 0, 0.7)'
+        background: "rgba(0, 0, 0, 0.7)",
       });
 
-      http.get("/getLoverWord?word=" + this.searchQuery).then((response) => {
-        this.textData = response.data;
-        // 隐藏加载动画
-        this.loadingInstance.close();
-      }).catch(() => {
-        // 隐藏加载动画（请求出错时也隐藏）
-        this.loadingInstance.close();
-      });
+      http
+        .get("/getLoverWord?word=" + this.searchQuery)
+        .then((response) => {
+          this.textData = response.data;
+          // 隐藏加载动画
+          this.loadingInstance.close();
+        })
+        .catch(() => {
+          // 隐藏加载动画（请求出错时也隐藏）
+          this.loadingInstance.close();
+        });
     },
   },
   created() {},
@@ -126,22 +179,21 @@ export default {
 </script>
 
 <style>
-
-.headPhoto{
+.headPhoto {
   vertical-align: middle;
-    height: 25px;
-    border-radius: 15px;
-    margin-right: 5px;
+  height: 25px;
+  border-radius: 15px;
+  margin-right: 5px;
 }
 .el-loading-spinner .el-loading-text {
-  color: #fff!important;
+  color: #fff !important;
 }
-.circular{
- border: 1px solid #fff;
+.circular {
+  border: 1px solid #fff;
 }
 
-.el-loading-spinner{
-  top: 37%!important;
+.el-loading-spinner {
+  top: 37% !important;
 }
 
 .text-display-box {

@@ -5,6 +5,9 @@ import zhCn from 'element-plus/dist/locale/zh-cn.mjs'; // 引入中文语言包
 import 'element-plus/dist/index.css';
 import router from './router';
 import * as echarts from 'echarts';
+import { ElMessageBox } from 'element-plus';
+import {ElNotification} from 'element-plus';
+ 
 
 const app = createApp(App);
 
@@ -15,5 +18,6 @@ app.use(ElementPlus, {
 
 app.use(router);
 app.config.globalProperties.$echarts = echarts;
-
+app.config.globalProperties.$msgbox = ElMessageBox;
+app.config.globalProperties.$notific = ElNotification;
 app.mount('#app');

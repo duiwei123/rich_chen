@@ -3,11 +3,7 @@
     <el-main>
       <el-form :inline="true" :model="formInline" class="demo-form-inline">
         <el-form-item label="姓名">
-          <el-input
-            v-model="formInline.user"
-            placeholder="请输入"
-            clearable
-          />
+          <el-input v-model="formInline.user" placeholder="请输入" clearable />
         </el-form-item>
         <el-form-item label="Activity zone">
           <el-select
@@ -37,9 +33,14 @@
         <el-table-column prop="Username" label="姓名"></el-table-column>
         <el-table-column prop="email" label="邮箱"></el-table-column>
       </el-table>
-      
-      <el-pagination :page-size="1" :pager-count="5" layout="prev, pager, next" :total="total"  @current-change="handleCurrentChange"/>
 
+      <el-pagination
+        :page-size="1"
+        :pager-count="5"
+        layout="prev, pager, next"
+        :total="total"
+        @current-change="handleCurrentChange"
+      />
     </el-main>
   </el-container>
 </template>
@@ -53,39 +54,37 @@ export default {
       users: [],
       name: "",
       region: "",
-      formInline:{
+      formInline: {
         pageSize: 1,
         pageNum: 1,
-
       },
-      total: 10
+      total: "",
     };
   },
-   created() {
-     this.getUsers()
+  created() {
+    this.getUsers();
   },
   methods: {
-      async getUsers(){
+    async getUsers() {
       try {
-       const response = await http.post("/users", this.formInline);
-      this.users = response.data.records;
-      this.total = response.data.count;
-      console.log(this.users);
-    } catch (error) {
-      console.error("获取用户数据失败", error);
-    }
-     },
-     handleCurrentChange(newPage) {
-          this.formInline.pageNum = newPage
-          this.getUsers()
-        }
+        const response = await http.post("/users", this.formInline);
+        this.users = response.data.records;
+        this.total = response.data.count;
+        console.log(this.users);
+      } catch (error) {
+        console.error("获取用户数据失败", error);
+      }
+    },
+    handleCurrentChange(newPage) {
+      this.formInline.pageNum = newPage;
+      this.getUsers();
+    },
   },
-
-
 };
 </script>
 
 <style scoped>
+
 .demo-form-inline .el-input {
   --el-input-width: 220px;
 }
