@@ -12,6 +12,7 @@
         <el-menu-item index="/">首页</el-menu-item>
         <el-menu-item index="/user-management">用户管理</el-menu-item>
         <el-menu-item index="/order">流水管理</el-menu-item>
+        <el-menu-item index="/test">测试页面</el-menu-item>
         <el-menu-item @click="logOut">退出</el-menu-item>
       </el-menu>
     </el-aside>

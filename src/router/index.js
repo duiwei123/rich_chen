@@ -3,6 +3,7 @@ import Home from '../views/Home.vue';
 import UserManagement from '../views/UserManagement.vue';
 import Order from '../views/Order.vue';
 import Login from '../views/Login.vue';
+import Test from '../views/Test.vue';
 
 const routes = [
   {
@@ -21,6 +22,12 @@ const routes = [
     path: '/order',
     name: 'Order',
     component: Order,
+    meta: { requiresAuth: true }, // 需要认证
+  },
+  {
+    path: '/test',
+    name: 'Test',
+    component: Test,
     meta: { requiresAuth: true }, // 需要认证
   },
   {
