@@ -3,7 +3,7 @@ import Home from '../views/Home.vue';
 import UserManagement from '../views/UserManagement.vue';
 import Order from '../views/Order.vue';
 import Login from '../views/Login.vue';
-import Test from '../views/Test.vue';
+import Photo from '../views/Photo.vue';
 
 const routes = [
   {
@@ -25,9 +25,9 @@ const routes = [
     meta: { requiresAuth: true }, // 需要认证
   },
   {
-    path: '/test',
-    name: 'Test',
-    component: Test,
+    path: '/photo',
+    name: 'Photo',
+    component: Photo,
     meta: { requiresAuth: true }, // 需要认证
   },
   {
