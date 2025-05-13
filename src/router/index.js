@@ -52,4 +52,23 @@ router.beforeEach((to, from, next) => {
   }
 });
 
+// 路由守卫
+router.beforeEach((to, from, next) => {
+  const appContainer = document.querySelector('.app-container');
+  const realMain = document.querySelector('.realMain');
+  if (to.name === 'Login') {
+    if (appContainer) {
+      appContainer.style.margin = '0';
+      realMain.style.margin = '0';
+      appContainer.style.padding = '0';
+    }
+  } else {
+    if (appContainer) {
+      appContainer.style.margin = '15px 15px 15px 0'; // 恢复默认值，这里可以根据实际情况调整
+      realMain.style.margin = '0px 10px 0 10px'
+    }
+  }
+  next();
+});
+
 export default router;

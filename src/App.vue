@@ -12,13 +12,13 @@
         <el-menu-item index="/">首页</el-menu-item>
         <el-menu-item index="/user-management">用户管理</el-menu-item>
         <el-menu-item index="/order">流水管理</el-menu-item>
-        <el-menu-item index="/photo">菜鸟的观察日记</el-menu-item>
+        <el-menu-item index="/photo">菜鸟的地球观察日记</el-menu-item>
         <el-menu-item @click="logOut">退出</el-menu-item>
       </el-menu>
     </el-aside>
 
     <!-- 主内容区域 -->
-    <el-container class="app-container">
+    <el-container class="app-container marginNone">
       <el-header class="header" v-if="!isLoginPage">
         <div class="search">
           <div @click="drawer = true" type="primary" style="margin-left: 16px">
@@ -98,7 +98,7 @@ export default {
   },
   mounted() {
     const token = "Bearer " + localStorage.getItem("token"); // 替换为实际的token
-    const url = 'http://localhost:8080/sse';
+    const url = 'http://115.190.91.146:8080/sse';
 
 
     // 创建EventSource对象，连接到服务端的SSE接口，并携带token

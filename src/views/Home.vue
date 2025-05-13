@@ -15,7 +15,9 @@
         <div class="littleCard"></div>
         <el-col :span="11">
           <el-card>
-            <img :src="weatherImg" alt="Weather Image" />
+            <img v-if="weatherImg" :src="weatherImg" alt="图片" />
+            <div v-else class="placeholder">加载中...</div>
+            <!-- <img :src="weatherImg" alt="Weather Image" /> -->
             <p>
               {{ weatherData.LocalName }}市现在{{
                 weatherData.WeatherReal
