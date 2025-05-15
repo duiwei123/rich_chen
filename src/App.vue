@@ -68,7 +68,7 @@
 import http from "@utils/http";
 import { EventSourcePolyfill } from "event-source-polyfill";
 
-const baseUrl = "http://localhost:8080";
+const baseUrl = "http://115.190.91.146:8080";
 
 export default {
   data() {

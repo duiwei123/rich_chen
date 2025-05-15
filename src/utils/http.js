@@ -5,7 +5,7 @@ import router from '../router';
 
 // 创建 Axios 实例
 const http = axios.create({
-  baseURL: 'http://localhost:8080', // 你的 API 地址
+  baseURL: 'http://115.190.91.146:8080', // 你的 API 地址
   // baseURL: 'http://huoshan:8080', // 你的 API 地址
   timeout: 60000, // 请求超时时间
 });
