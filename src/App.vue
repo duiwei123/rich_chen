@@ -66,7 +66,9 @@
 
 <script>
 import http from "@utils/http";
-import { EventSourcePolyfill } from 'event-source-polyfill';
+import { EventSourcePolyfill } from "event-source-polyfill";
+
+const baseUrl = "http://localhost:8080";
 
 export default {
   data() {
@@ -77,7 +79,7 @@ export default {
       textData: "", // 原始文本
       loadingInstance: null, // 加载实例
       headPhoto: localStorage.getItem("headPhoto"),
-      messages: '',
+      messages: "",
       eventSource: null,
     };
   },
@@ -98,11 +100,10 @@ export default {
   },
   mounted() {
     const token = "Bearer " + localStorage.getItem("token"); // 替换为实际的token
-    const url = 'http://115.190.91.146:8080/sse';
-
+    const url = "/sse";
 
     // 创建EventSource对象，连接到服务端的SSE接口，并携带token
-    this.eventSource = new EventSourcePolyfill(url, {
+    this.eventSource = new EventSourcePolyfill(baseUrl + url, {
       headers: {
         Authorization: token,
       },
@@ -110,16 +111,16 @@ export default {
     });
     // 监听消息事件
     this.eventSource.onmessage = (event) => {
-      console.log("eventdata是"+event.data)
-      if(event.data == 'heartbeat') {
-        return
+      console.log("eventdata是" + event.data);
+      if (event.data == "heartbeat") {
+        return;
       }
-      this.message = event.data
+      this.message = event.data;
       this.$notific({
-        title: '新消息', // 标题
+        title: "新消息", // 标题
         message: this.message, // 消息内容
-        type: 'info', // 类型：success/warning/info/error
-        position: 'bottom-right', // 显示位置
+        type: "info", // 类型：success/warning/info/error
+        position: "bottom-right", // 显示位置
         duration: 3000, // 自动关闭时间（毫秒）
       });
     };
@@ -134,11 +135,17 @@ export default {
     if (this.eventSource) {
       this.eventSource.close();
     }
+    if (this.deepSeekEvent) {
+      this.deepSeekEvent.close();
+    }
   },
   beforeDestroy() {
     // 组件销毁前关闭EventSource连接
     if (this.eventSource) {
       this.eventSource.close();
+    }
+    if (this.deepSeekEvent) {
+      this.deepSeekEvent.close();
     }
   },
   methods: {
@@ -154,25 +161,32 @@ export default {
       console.log("搜索内容:", this.searchQuery);
     },
     search() {
-      // 显示加载动画
-      this.loadingInstance = this.$loading({
-        target: this.$refs.loadingTarget,
-        text: "正在等待deepseek响应...",
-        spinner: '<div class="loading-dots"></div>',
-        background: "rgba(0, 0, 0, 0.7)",
-      });
-
-      http
-        .get("/getLoverWord?word=" + this.searchQuery)
-        .then((response) => {
-          this.textData = response.data;
-          // 隐藏加载动画
-          this.loadingInstance.close();
-        })
-        .catch(() => {
-          // 隐藏加载动画（请求出错时也隐藏）
-          this.loadingInstance.close();
-        });
+      console.log("ttttttt");
+      this.textData = "思考中...";
+      // 流式deepseek
+      const token = "Bearer " + localStorage.getItem("token"); // 替换为实际的token
+      // 创建EventSource对象，连接到服务端的SSE接口，并携带token
+      var deepSeekEvent = new EventSourcePolyfill(
+        baseUrl + "/streamDeepSeek?word=" + this.searchQuery,
+        {
+          headers: {
+            Authorization: token,
+          },
+        }
+      );
+      this.textData = "";
+      // 监听消息事件
+      deepSeekEvent.onmessage = (event) => {
+        console.log("ssss", JSON.stringify(event, null, 2));
+        if (event.data === "i_am_finish") {
+          console.log("ggggggggg");
+          // 假设服务端发送结束标记
+          deepSeekEvent.close();
+          return;
+        }
+        this.textData = this.textData += event.data;
+      };
+      deepSeekEvent.close;
     },
   },
   created() {},
