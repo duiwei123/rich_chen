@@ -25,7 +25,7 @@
             <el-icon><Search /></el-icon> Search...
           </div>
         </div>
-        <div style="float: right; height: 60px">
+        <div style="height: 60px">
           <span><img class="headPhoto" :src="headPhoto" /></span>
           <span style="font-size: 12px">欢迎{{ name }}</span>
         </div>
@@ -235,15 +235,13 @@ export default {
 .search {
   color: var(--el-text-color-placeholder);
   cursor: default;
+  width: 100%;
 }
 
 .el-input__wrapper {
   box-shadow: none !important;
 }
-.search {
-  float: left;
-  width: 500px;
-}
+
 .logo {
   margin: 20px 0 !important;
 }
@@ -264,6 +262,8 @@ export default {
 
 .header {
   border-radius: 15px 15px 0 0;
+  display: flex;
+  justify-content: space-between
 }
 
 .noRightBorder {

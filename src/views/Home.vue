@@ -5,11 +5,8 @@
         <el-col class="baise" :span="24">
           <el-card>
             <h2>
-              欢迎使用 Vue 3 + Element Plus + ECharts + Axios + Vue Router
+              {{ titleMessage }}
             </h2>
-            <el-button type="primary" @click="goToUserManagement"
-              >前往用户管理</el-button
-            >
           </el-card>
         </el-col>
         <div class="littleCard"></div>
@@ -75,12 +72,14 @@ export default {
       weatherData: {},
       suggestion: "",
       weatherImg: "",
+      titleMessage: ""
     };
   },
   mounted() {
     this.fetchCalendarData();
     this.getWeather();
     this.getSuggestion();
+    this.getTitleMessage();
   },
   methods: {
     goToUserManagement() {
@@ -137,16 +136,19 @@ export default {
     getDateEvents(dateString) {
       return this.calendarEvents.filter((item) => item.date === dateString);
     },
+    getTitleMessage() {
+      this.titleMessage = "每一天都是新的开始，带着希望出发，微笑面对生活。困难只是暂时的，坚持终会迎来光明。相信自己，你比想象中更强大。保持热爱，奔赴山海，未来可期！💪✨"  + "(由deepseek生成)";
+    }
   },
 };
 </script>
   
   <style scoped>
+  :deep(.el-calendar-table .el-calendar-day) {
+    height: 65px!important;
+  }
 .calendar .el-card__body .el-calendar .el-calendar__body {
   padding: 12px 20px 0px;
-}
-.calendar {
-  height: 444px;
 }
 .el-calendar {
   --el-calendar-cell-width: 50px;
