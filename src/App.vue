@@ -22,7 +22,7 @@
       <el-header class="header" v-if="!isLoginPage">
         <div class="search">
           <div @click="drawer = true" type="primary" style="margin-left: 16px">
-            <el-icon><Search /></el-icon> Search...
+            <el-icon><Search /></el-icon> 已接入Deepseek，请输入搜索内容...
           </div>
         </div>
         <div style="height: 60px">
@@ -37,7 +37,7 @@
           <div style="padding: 20px; display: flex">
             <el-input
               v-model="searchQuery"
-              placeholder="已接入Deepseek，请输入搜索内容..."
+              placeholder="Search..."
               clearable
               @input="handleSearch"
               style="flex: 0 0 92%; margin-right: 10px"
@@ -66,9 +66,11 @@
 
 <script>
 import http from "@utils/http";
+import {baseHttpUrl} from "@utils/http";
 import { EventSourcePolyfill } from "event-source-polyfill";
 
-const baseUrl = "http://115.190.91.146:8080";
+// const baseUrl =  baseHttpUrl;
+const baseUrl =  'http://localhost:8080';
 
 export default {
   data() {
@@ -231,7 +233,9 @@ export default {
   padding: 20px;
   margin-top: 10px;
 }
-
+.search:hover {
+  cursor: pointer;
+}
 .search {
   color: var(--el-text-color-placeholder);
   cursor: default;

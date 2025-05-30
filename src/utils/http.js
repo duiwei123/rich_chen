@@ -3,9 +3,11 @@ import axios from 'axios';
 import { ElMessage } from 'element-plus';
 import router from '../router';
 
+export const baseHttpUrl = 'http://localhost:8080'
+
 // 创建 Axios 实例
 const http = axios.create({
-  baseURL: 'http://115.190.91.146:8080', // 你的 API 地址
+  baseURL: baseHttpUrl, // 你的 API 地址
   // baseURL: 'http://huoshan:8080', // 你的 API 地址
   timeout: 60000, // 请求超时时间
 });
