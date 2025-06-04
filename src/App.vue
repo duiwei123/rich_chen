@@ -13,6 +13,7 @@
         <el-menu-item index="/user-management">用户管理</el-menu-item>
         <el-menu-item index="/order">流水管理</el-menu-item>
         <el-menu-item index="/photo">菜鸟的地球观察日记</el-menu-item>
+        <el-menu-item index="/messageList">消息列表</el-menu-item>
         <el-menu-item @click="logOut">退出</el-menu-item>
       </el-menu>
     </el-aside>

@@ -4,6 +4,9 @@ import Home from '../views/Home.vue';
 import Order from '../views/Order.vue';
 import Login from '../views/Login.vue';
 import Photo from '../views/Photo.vue';
+import MessageList from '../views/Message.vue'
+import { pa } from 'element-plus/es/locales.mjs';
+import component from 'element-plus/es/components/tree-select/src/tree-select-option.mjs';
 
 const routes = [
   {
@@ -35,6 +38,11 @@ const routes = [
     name: 'Login',
     component: Login,
   },
+  {
+    path: '/messageList',
+    name: 'MessageList',
+    component: MessageList
+  }
 ];
 
 const router = createRouter({
