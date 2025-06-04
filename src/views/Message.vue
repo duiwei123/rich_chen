@@ -9,14 +9,16 @@
       >
         <!-- 留言头部：用户信息和时间 -->
         <template #header>
-          <div class="flex items-center">
+          <div class="items-center">
             <el-avatar
               :src="message.profilePhoto || 'https://picsum.photos/200/200'"
               size="middle"
               :shape="shape"
               class="border-2 border-gray-100"
             ></el-avatar>
+            <div>
             {{ message.name }}
+            </div>
             
           </div>
         </template>
@@ -179,5 +181,13 @@ export default {
 .font-medium {
   height: 45px;
   line-height: 45px;
+}
+.items-center{
+    display: flex;
+    align-items: center;
+}
+
+.el-card + .el-card {
+    margin-top: 10px;
 }
 </style>
