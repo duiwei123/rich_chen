@@ -14,6 +14,7 @@
         <el-menu-item index="/order">流水管理</el-menu-item>
         <el-menu-item index="/photo">菜鸟的地球观察日记</el-menu-item>
         <el-menu-item index="/messageList">消息列表</el-menu-item>
+        <el-menu-item index="/homePage">首页</el-menu-item>
         <el-menu-item @click="logOut">退出</el-menu-item>
       </el-menu>
     </el-aside>
@@ -70,8 +71,8 @@ import http from "@utils/http";
 import {baseHttpUrl} from "@utils/http";
 import { EventSourcePolyfill } from "event-source-polyfill";
 
-// const baseUrl =  baseHttpUrl;
-const baseUrl =  'http://115.190.91.146:8080';
+const baseUrl =  baseHttpUrl;
+// const baseUrl =  'http://115.190.91.146:8080';
 
 export default {
   data() {

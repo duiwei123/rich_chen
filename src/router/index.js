@@ -5,6 +5,7 @@ import Order from '../views/Order.vue';
 import Login from '../views/Login.vue';
 import Photo from '../views/Photo.vue';
 import MessageList from '../views/Message.vue'
+import HomePage from '../views/HomePage.vue'
 import { pa } from 'element-plus/es/locales.mjs';
 import component from 'element-plus/es/components/tree-select/src/tree-select-option.mjs';
 
@@ -42,6 +43,11 @@ const routes = [
     path: '/messageList',
     name: 'MessageList',
     component: MessageList
+  },
+  {
+    path: '/homePage',
+    name: 'HomePage',
+    component: HomePage
   }
 ];
 
