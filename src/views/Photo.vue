@@ -20,6 +20,7 @@
       :close-on-click-modal="false"
       :before-close="handleDialogClose"
     >
+      <!-- 表单内容保持不变 -->
       <el-form 
         ref="formRef" 
         :model="form" 
@@ -27,6 +28,7 @@
         label-width="100px"
         class="photo-form"
       >
+        <!-- 表单项目保持不变 -->
         <el-form-item label="作者" prop="author">
           <el-input 
             v-model="form.author" 
@@ -52,11 +54,8 @@
         </el-form-item>
         
         <el-form-item label="ISO" prop="iso">
-          <el-input-number
+          <el-input
             v-model="form.iso"
-            :min="1"
-            :max="12800"
-            :step="100"
             style="width: 100%"
             placeholder="请输入ISO值"
           />
@@ -126,14 +125,16 @@
         <p>加载中...</p>
       </div>
       
-      <!-- 照片轮播（单张显示模式） -->
+      <!-- 照片轮播（添加ref引用） -->
       <div v-if="photoList.length > 0 && !loading" class="carousel-wrapper">
         <el-carousel 
+          ref="carouselRef"   
           :interval="5000" 
           height="600px"
           indicator-position="none"
           arrow="always"
           class="single-photo-carousel"
+          @change="handleCarouselChange"  
         >
           <el-carousel-item 
             v-for="(item, index) in photoList" 
@@ -141,7 +142,6 @@
             class="single-carousel-item"
           >
             <div class="photo-container">
-              <!-- 图片容器（适配不同比例图片） -->
               <div class="image-wrapper">
                 <img 
                   :src="item.imageUrl" 
@@ -152,7 +152,6 @@
                 />
               </div>
               
-              <!-- 照片参数卡片 -->
               <div class="photo-info">
                 <h3 class="photo-author">{{ item.author || '未知作者' }}</h3>
                 <div class="photo-params">
@@ -173,15 +172,13 @@
             </div>
           </el-carousel-item>
         </el-carousel>
-        
-   
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, watch } from "vue";
+import { ref, reactive, onMounted, nextTick } from "vue";
 import { ElMessage } from "element-plus";
 import http from "../utils/http";
 
@@ -190,14 +187,14 @@ const dialogVisible = ref(false);
 const uploading = ref(false);
 const submitting = ref(false);
 const loading = ref(false);
-const currentIndex = ref(0); // 当前轮播索引
+const currentIndex = ref(0); // 记录当前轮播索引
 
 // 表单数据
 const form = reactive({
   author: "",       // 作者
   aperture: "",     // 光圈
   shutter: "",      // 快门
-  iso: null,        // ISO
+  iso: "I100",      // ISO
   imageName: "",    // 服务器保存的文件名
   imageRealName: "" // 原始文件名
 });
@@ -221,7 +218,7 @@ const rules = {
   ]
 };
 
-// 照片列表
+// 照片列表和轮播组件引用
 const photoList = ref([]);
 const formRef = ref();
 const carouselRef = ref(); // 轮播组件引用
@@ -230,6 +227,11 @@ const carouselRef = ref(); // 轮播组件引用
 onMounted(async () => {
   await fetchPhotoList();
 });
+
+// 监听轮播索引变化
+const handleCarouselChange = (index) => {
+  currentIndex.value = index; // 实时更新当前索引
+};
 
 // 监听弹窗关闭，重置表单
 const handleDialogClose = () => {
@@ -245,8 +247,8 @@ const resetForm = () => {
   submitting.value = false;
 };
 
-// 获取照片列表
-const fetchPhotoList = async () => {
+// 获取照片列表（新增参数：是否需要恢复索引）
+const fetchPhotoList = async (shouldRestoreIndex = false) => {
   loading.value = true;
   try {
     const res = await http.post("/getPhotoList");
@@ -258,7 +260,16 @@ const fetchPhotoList = async () => {
       imageUrl: `http://115.190.91.146/preview/${item.imageName}`,
       loading: true
     }));
-    currentIndex.value = 0; // 重置轮播索引
+
+    // 如果需要恢复索引，在DOM更新后执行
+    if (shouldRestoreIndex && carouselRef.value) {
+      await nextTick(); // 等待DOM更新完成
+      // 处理新列表长度小于原索引的情况
+      const targetIndex = photoList.value.length > currentIndex.value 
+        ? currentIndex.value 
+        : 0;
+      carouselRef.value.setActiveItem(targetIndex); // 恢复到原索引位置
+    }
   } catch (error) {
     ElMessage.error("获取照片列表失败");
     console.error("获取照片列表错误:", error);
@@ -322,7 +333,8 @@ const submitForm = async () => {
       await http.post("/savePhoto", form);
       ElMessage.success("照片参数保存成功");
       dialogVisible.value = false;
-      await fetchPhotoList(); // 重新获取列表
+      // 重新获取列表，并传入true表示需要恢复索引
+      await fetchPhotoList(true); 
     } catch (error) {
       ElMessage.error("保存失败，请重试");
       console.error("保存错误:", error);
@@ -331,20 +343,6 @@ const submitForm = async () => {
     }
   });
 };
-
-// 轮播控制方法
-const prevSlide = () => {
-  carouselRef.value.prev();
-};
-
-const nextSlide = () => {
-  carouselRef.value.next();
-};
-
-// 监听轮播索引变化
-watch(currentIndex, (newVal) => {
-  // 可以在这里添加索引变化时的额外逻辑
-});
 </script>
 
 <style scoped>
