@@ -5,7 +5,7 @@
       <el-menu
         mode="vertical"
         router
-        default-active="/"
+        :default-active="$route.path"  
         class="el-menu-vertical-demo noRightBorder app-el-menu"
       >
         <el-menu-item class="logo">LOGO</el-menu-item>
@@ -15,6 +15,7 @@
         <el-menu-item index="/photo">菜鸟的地球观察日记</el-menu-item>
         <el-menu-item index="/messageList">消息列表</el-menu-item>
         <el-menu-item index="/homePage">首页</el-menu-item>
+        <el-menu-item index="/markDownPage">mark</el-menu-item>
         <el-menu-item @click="logOut">退出</el-menu-item>
       </el-menu>
     </el-aside>
@@ -93,14 +94,14 @@ export default {
       return this.$route.path === "/login";
     },
     // 过滤后的文本
-    // filteredText() {
-    //   if (!this.searchQuery) return this.textData; // 如果没有输入，显示全部文本
-    //   const lowerCaseQuery = this.searchQuery.toLowerCase();
-    //   if (this.textData.toLowerCase().includes(lowerCaseQuery)) {
-    //     return this.textData; // 如果匹配，显示原始文本
-    //   }
-    //   return null; // 如果没有匹配，返回 null
-    // },
+    filteredText() {
+      if (!this.searchQuery) return this.textData; // 如果没有输入，显示全部文本
+      const lowerCaseQuery = this.searchQuery.toLowerCase();
+      if (this.textData.toLowerCase().includes(lowerCaseQuery)) {
+        return this.textData; // 如果匹配，显示原始文本
+      }
+      return null; // 如果没有匹配，返回 null
+    },
   },
   mounted() {
     const token = "Bearer " + localStorage.getItem("token"); // 替换为实际的token

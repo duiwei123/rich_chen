@@ -6,6 +6,8 @@ import Login from '../views/Login.vue';
 import Photo from '../views/Photo.vue';
 import MessageList from '../views/Message.vue'
 import HomePage from '../views/HomePage.vue'
+import MarkDown  from '../views/MarkDown.vue';
+import MarkDownPage from '../views/markDowm/MarkDownPage.vue';
 import { pa } from 'element-plus/es/locales.mjs';
 import component from 'element-plus/es/components/tree-select/src/tree-select-option.mjs';
 
@@ -48,6 +50,16 @@ const routes = [
     path: '/homePage',
     name: 'HomePage',
     component: HomePage
+  },
+  {
+    path: '/markDown',
+    name: 'MarkDown',
+    component: MarkDown
+  },
+  {
+    path: '/markDownPage',
+    name: 'MarkDownPage',
+    component: MarkDownPage
   }
 ];
 

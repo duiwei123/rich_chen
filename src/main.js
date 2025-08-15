@@ -5,6 +5,8 @@ import zhCn from 'element-plus/dist/locale/zh-cn.mjs'; // 引入中文语言包
 import 'element-plus/dist/index.css';
 import router from './router';
 import * as echarts from 'echarts';
+    import mavonEditor from 'mavon-editor'
+    import 'mavon-editor/dist/css/index.css'
 import { ElMessageBox } from 'element-plus';
 import {ElNotification} from 'element-plus';
  
@@ -17,6 +19,7 @@ app.use(ElementPlus, {
 });
 
 app.use(router);
+app.use(mavonEditor)
 app.config.globalProperties.$echarts = echarts;
 app.config.globalProperties.$msgbox = ElMessageBox;
 app.config.globalProperties.$notific = ElNotification;
