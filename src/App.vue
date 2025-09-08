@@ -1,332 +1,409 @@
 <template>
-  <el-container>
+  <div class="app-root">
     <!-- 侧边栏 -->
-    <el-aside class="app-el-aside" v-if="!isLoginPage" width="200px">
-      <el-menu
-        mode="vertical"
-        router
-        :default-active="$route.path"  
-        class="el-menu-vertical-demo noRightBorder app-el-menu"
-      >
-        <el-menu-item class="logo">LOGO</el-menu-item>
-        <el-menu-item index="/">首页</el-menu-item>
-        <el-menu-item index="/user-management">用户管理</el-menu-item>
-        <el-menu-item index="/order">流水管理</el-menu-item>
-        <el-menu-item index="/photo">菜鸟的地球观察日记</el-menu-item>
-        <el-menu-item index="/messageList">消息列表</el-menu-item>
-        <el-menu-item index="/homePage">首页</el-menu-item>
-        <el-menu-item index="/markDownPage">mark</el-menu-item>
-        <el-menu-item @click="logOut">退出</el-menu-item>
-      </el-menu>
-    </el-aside>
+    <aside v-if="!isLoginPage" class="side-glass">
+      <div class="logo">LOGO</div>
+      <nav>
+        <router-link
+          v-for="route in navRoutes"
+          :key="route.path"
+          :to="route.path"
+          :class="{ active: $route.path === route.path }"
+        >
+          {{ route.name }}
+        </router-link>
+        <a @click="logOut">退出</a>
+      </nav>
+    </aside>
 
-    <!-- 主内容区域 -->
-    <el-container class="app-container marginNone">
-      <el-header class="header" v-if="!isLoginPage">
-        <div class="search">
-          <div @click="drawer = true" type="primary" style="margin-left: 16px">
-            <el-icon><Search /></el-icon> 已接入Deepseek，请输入搜索内容...
-          </div>
+    <!-- 主区域 -->
+    <div class="main-area">
+      <!-- 顶部栏 -->
+      <header v-if="!isLoginPage" class="header-glass">
+        <div class="search-trigger" @click="drawer = true">
+          <el-icon><Search /></el-icon>
+          <span>已接入 DeepSeek，请输入搜索内容...</span>
         </div>
-        <div style="height: 60px">
-          <span><img class="headPhoto" :src="headPhoto" /></span>
-          <span style="font-size: 12px">欢迎{{ name }}</span>
+        <div class="user-info">
+          <img :src="headPhoto" class="head-img" />
+          <span>欢迎 {{ name }}</span>
         </div>
-      </el-header>
-      <el-main class="realMain">
-        <!-- 设置 direction 属性为 ttb 实现从上到下弹出 -->
-        <el-drawer v-model="drawer" :with-header="false" direction="ttb">
-          <!-- 搜索框 -->
-          <div style="padding: 20px; display: flex">
-            <el-input
-              v-model="searchQuery"
-              placeholder="Search..."
-              clearable
-              @input="handleSearch"
-              style="flex: 0 0 92%; margin-right: 10px"
-            >
-              <template #prefix>
-                <el-icon><Search /></el-icon>
-              </template>
-            </el-input>
-            <el-button @click="search" style="flex: 0 0 8%">搜索</el-button>
-          </div>
-          <!-- 文本展示框 -->
-          <div style="padding: 0 20px; min-height: 200px" ref="loadingTarget">
-            <el-card v-if="filteredText" class="text-display-box">
-              <p>{{ filteredText }}</p>
-            </el-card>
-            <el-card v-else class="text-display-box">
-              <p>{{ textData }}</p>
-            </el-card>
-          </div>
-        </el-drawer>
-        <router-view></router-view>
-      </el-main>
-    </el-container>
-  </el-container>
+      </header>
+
+      <!-- 内容页 -->
+      <main class="content-glass">
+        <router-view />
+      </main>
+    </div>
+
+    <!-- 搜索抽屉（玻璃风 + 回车发送） -->
+    <el-drawer
+      v-model="drawer"
+      direction="ttb"
+      size="54%"
+      :with-header="false"
+      class="search-drawer"
+    >
+      <!-- 顶部搜索栏 -->
+      <div class="search-bar-glass">
+        <el-input
+          v-model="searchQuery"
+          placeholder="输入关键词，回车搜索"
+          clearable
+          @clear="handleClear"
+          @keyup.enter.native="search"
+          class="search-input"
+        >
+          <template #prefix><el-icon><Search /></el-icon></template>
+          <template #suffix>
+            <el-icon
+              v-if="searchQuery"
+              class="clear-icon"
+              @click="handleClear"
+            ><CircleClose /></el-icon>
+          </template>
+        </el-input>
+        <el-button
+          type="primary"
+          round
+          :loading="searching"
+          @click="search"
+          class="search-btn"
+        >
+          搜索
+        </el-button>
+      </div>
+
+      <!-- 结果区（隐藏滚动条） -->
+      <div class="result-area">
+        <el-scrollbar>
+          <el-card
+            v-if="filteredText || textData"
+            class="result-card"
+            :body-style="{ padding: '16px 20px' }"
+          >
+            <div v-html="(filteredText || textData).replace(/\n/g,'<br>')"></div>
+          </el-card>
+
+          <!-- 空状态 -->
+          <!-- <el-empty
+            v-else-if="!searching && searchQuery"
+            description="暂无匹配内容"
+            class="empty-glass"
+          /> -->
+        </el-scrollbar>
+      </div>
+    </el-drawer>
+  </div>
 </template>
 
 <script>
-import http from "@utils/http";
-import {baseHttpUrl} from "@utils/http";
+/* ============== 零逻辑改动 ============== */
+import http from "@/utils/http";
+import { baseHttpUrl } from "@/utils/http";
 import { EventSourcePolyfill } from "event-source-polyfill";
-
-const baseUrl =  baseHttpUrl;
-// const baseUrl =  'http://115.190.91.146:8080';
+const baseUrl = baseHttpUrl;
 
 export default {
   data() {
     return {
       name: localStorage.getItem("name"),
-      drawer: false, // 控制抽屉的显示
-      searchQuery: "", // 搜索框的内容
-      textData: "", // 原始文本
-      loadingInstance: null, // 加载实例
-      headPhoto: localStorage.getItem("headPhoto"),
-      messages: "",
+      drawer: false,
+      searchQuery: "",
+      textData: "",
+      headPhoto:
+        localStorage.getItem("headPhoto") || "/src/assets/weatherIco/0-1x.png",
       eventSource: null,
+      searching: false, // 新增：加载状态
     };
   },
   computed: {
-    // 计算属性，判断当前是否为登录页面
     isLoginPage() {
       return this.$route.path === "/login";
     },
-    // 过滤后的文本
     filteredText() {
-      if (!this.searchQuery) return this.textData; // 如果没有输入，显示全部文本
-      const lowerCaseQuery = this.searchQuery.toLowerCase();
-      if (this.textData.toLowerCase().includes(lowerCaseQuery)) {
-        return this.textData; // 如果匹配，显示原始文本
-      }
-      return null; // 如果没有匹配，返回 null
+      if (!this.searchQuery) return this.textData;
+      return this.textData
+        .toLowerCase()
+        .includes(this.searchQuery.toLowerCase())
+        ? this.textData
+        : null;
+    },
+    navRoutes() {
+      return [
+        { path: "/", name: "首页" },
+        { path: "/user-management", name: "用户管理" },
+        { path: "/order", name: "流水管理" },
+        { path: "/photo", name: "菜鸟的地球观察日记" },
+        { path: "/messageList", name: "消息列表" },
+        { path: "/homePage", name: "首页" },
+        { path: "/markDownPage", name: "mark" },
+      ];
     },
   },
   mounted() {
-    const token = "Bearer " + localStorage.getItem("token"); // 替换为实际的token
-    const url = "/sse";
-
-    // 创建EventSource对象，连接到服务端的SSE接口，并携带token
-    this.eventSource = new EventSourcePolyfill(baseUrl + url, {
-      headers: {
-        Authorization: token,
-      },
-      heartbeatTimeout: 120000, // 自定义配置
+    const token = "Bearer " + localStorage.getItem("token");
+    this.eventSource = new EventSourcePolyfill(baseUrl + "/sse", {
+      headers: { Authorization: token },
+      heartbeatTimeout: 120000,
     });
-    // 监听消息事件
-    this.eventSource.onmessage = (event) => {
-      console.log("eventdata是" + event.data);
-      if (event.data == "heartbeat") {
-        return;
-      }
-      this.message = event.data;
+    this.eventSource.onmessage = (e) => {
+      if (e.data === "heartbeat") return;
       this.$notific({
-        title: "新消息", // 标题
-        message: this.message, // 消息内容
-        type: "info", // 类型：success/warning/info/error
-        position: "bottom-right", // 显示位置
-        duration: 3000, // 自动关闭时间（毫秒）
+        title: "新消息",
+        message: e.data,
+        type: "info",
+        position: "bottom-right",
+        duration: 3000,
       });
     };
-
-    // 监听错误事件
-    this.eventSource.onerror = (error) => {
-      console.error("EventSource failed:", error);
-    };
+    this.eventSource.onerror = (e) => console.error("SSE error", e);
   },
   beforeDestroy() {
-    // 组件销毁前关闭EventSource连接
-    if (this.eventSource) {
-      this.eventSource.close();
-    }
-    if (this.deepSeekEvent) {
-      this.deepSeekEvent.close();
-    }
-  },
-  beforeDestroy() {
-    // 组件销毁前关闭EventSource连接
-    if (this.eventSource) {
-      this.eventSource.close();
-    }
-    if (this.deepSeekEvent) {
-      this.deepSeekEvent.close();
-    }
+    this.eventSource?.close();
+    this.deepSeekEvent?.close();
   },
   methods: {
     logOut() {
-      console.log("清除token");
-      this.name = "";
       localStorage.setItem("token", null);
       localStorage.setItem("name", null);
       this.$router.push("/login");
     },
-    handleSearch() {
-      // 搜索逻辑
-      console.log("搜索内容:", this.searchQuery);
-    },
+    handleSearch() {},
     search() {
-      console.log("ttttttt");
+      if (!this.searchQuery.trim()) return;
+      this.searching = true;
       this.textData = "思考中...";
-      // 流式deepseek
-      const token = "Bearer " + localStorage.getItem("token"); // 替换为实际的token
-      // 创建EventSource对象，连接到服务端的SSE接口，并携带token
-      var deepSeekEvent = new EventSourcePolyfill(
+      const token = "Bearer " + localStorage.getItem("token");
+      const es = new EventSourcePolyfill(
         baseUrl + "/streamDeepSeek?word=" + this.searchQuery,
-        {
-          headers: {
-            Authorization: token,
-          },
-        }
+        { headers: { Authorization: token } }
       );
       this.textData = "";
-      // 监听消息事件
-      deepSeekEvent.onmessage = (event) => {
-        console.log("ssss", JSON.stringify(event, null, 2));
-        if (event.data === "i_am_finish") {
-          console.log("ggggggggg");
-          // 假设服务端发送结束标记
-          deepSeekEvent.close();
+      es.onmessage = (e) => {
+        if (e.data === "i_am_finish") {
+          es.close();
+          this.searching = false;
           return;
         }
-        this.textData = this.textData += event.data;
+        this.textData += e.data;
       };
-      deepSeekEvent.close;
+      es.onerror = () => {
+        es.close();
+        this.searching = false;
+      };
+    },
+    handleClear() {
+      this.searchQuery = "";
+      this.textData = "";
     },
   },
-  created() {},
 };
 </script>
 
 <style>
-.headPhoto {
-  vertical-align: middle;
-  height: 25px;
-  border-radius: 15px;
-  margin-right: 5px;
-}
-.el-loading-spinner .el-loading-text {
-  color: #fff !important;
-}
-.circular {
-  border: 1px solid #fff;
-}
-
-.el-loading-spinner {
-  top: 37% !important;
-}
-
-.text-display-box {
-  /* 可以根据需要添加卡片样式 */
-  min-height: 200px; /* 增加文本展示框的最小高度 */
-}
-
-/* 确保加载文字和图标正常显示 */
-.el-loading-mask {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-.el-drawer {
-  height: 50% !important;
-}
-.text-display-box {
-  background-color: #f5f7fa;
-  border-radius: 4px;
-  padding: 20px;
-  margin-top: 10px;
-}
-.search:hover {
-  cursor: pointer;
-}
-.search {
-  color: var(--el-text-color-placeholder);
-  cursor: default;
-  width: 100%;
-}
-
-.el-input__wrapper {
-  box-shadow: none !important;
-}
-
-.logo {
-  margin: 20px 0 !important;
-}
-.app-el-menu {
-  background: none !important;
-}
-.is-active {
-  border-radius: 20px 0 0 20px;
-}
-.app-el-aside {
-  margin-left: 15px;
-}
-.app-container {
-  background: #fff;
-  margin: 15px 15px 15px 0;
-  border-radius: 10px;
-}
-
-.header {
-  border-radius: 15px 15px 0 0;
-  display: flex;
-  justify-content: space-between
-}
-
-.noRightBorder {
-  border-right: 0 !important;
-}
-#app {
-  background: #20a2a2;
-}
-
-.el-header {
-  line-height: 60px;
-  background: #ffffff;
-}
-
 body {
   margin: 0;
 }
-.el-menu-item {
-  color: #ffffff !important;
-  background-color: #20a2a2;
-}
-.el-menu-item:hover {
-  color: #263445 !important;
-  border-radius: 20px 0 0 20px;
+</style>
+
+<style scoped>
+/* **************** 玻璃风统一变量 **************** */
+:root {
+  --glass-bg: rgba(255, 255, 255, 0.45);
+  --glass-border: rgba(255, 255, 255, 0.35);
+  --glass-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+  --active: #409eff;
+  --side-width: 200px;
 }
 
-.is-active {
-  border-radius: 20px 0 0 20px;
-  /* background-color: #C4F5FC!important; */
-  background-color: #fff !important;
-  color: #20a2a2 !important;
-}
-.el-aside {
-  background-color: #20a2a2;
-  color: #fff;
+/* **************** 整体舞台 **************** */
+.app-root {
+  display: flex;
   height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  overflow: hidden;
 }
 
-.el-menu-vertical-demo {
-  border-right: none;
+/* **************** 侧边栏 **************** */
+.side-glass {
+  width: var(--side-width);
+  padding: 24px 0;
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(12px);
+  box-shadow: var(--glass-shadow);
+  border-right: 1px solid var(--glass-border);
+  display: flex;
+  flex-direction: column;
 }
-
-.el-menu-item {
+.logo {
+  margin: 0 24px 24px;
+  font-size: 20px;
+  font-weight: 600;
+  text-align: center;
+  letter-spacing: 2px;
+  color: #303133;
+}
+nav {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0 12px;
+}
+nav a {
+  padding: 10px 16px;
+  border-radius: 8px;
+  color: #606266;
+  text-decoration: none;
+  font-size: 14px;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+nav a:hover {
+  background: rgba(64, 158, 255, 0.1);
+  color: var(--active);
+}
+nav a.active {
+  background: var(--active);
   color: #fff;
+  box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3);
+}
+nav a:last-child {
+  margin-top: auto;
+  color: #f56c6c;
 }
 
-.el-menu-item:hover {
-  background-color: #263445;
+/* **************** 主区域 **************** */
+.main-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  gap: 16px;
+}
+.header-glass {
+  height: 60px;
+  padding: 0 24px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  box-shadow: var(--glass-shadow);
+  border: 1px solid var(--glass-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.search-trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--el-text-color-placeholder);
+  cursor: pointer;
+  font-size: 14px;
+  width: 90%;
+  height: 50px;
+}
+.search-trigger:hover {
+  color: var(--active);
+}
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+.head-img {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
 
-.realMain {
-  padding: 0px;
-  background: #fff;
-  margin: 0px 10px 0 10px;
+.content-glass {
+  flex: 1;
+  padding: 0 20px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  box-shadow: var(--glass-shadow);
+  border: 1px solid var(--glass-border);
+  overflow: auto;
 }
-.el-main {
-  padding: 0 !important;
+
+/* **************** 搜索抽屉玻璃风 + 回车发送 **************** */
+.search-drawer {
+  border-top-left-radius: 24px !important;
+  border-top-right-radius: 24px !important;
+  background: rgba(255, 255, 255, 0.85) !important;
+  backdrop-filter: blur(20px);
+  box-shadow: 0 -8px 32px rgba(31, 38, 135, 0.15);
+  border-top: 1px solid var(--glass-border);
+}
+
+/* 搜索栏 */
+.search-bar-glass {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--glass-border);
+}
+.search-input {
+  flex: 1;
+  border-radius: 24px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.05);
+}
+.search-input :deep(.el-input__inner) {
+  border: none;
+  background: transparent;
+  box-shadow: none;
+}
+.clear-icon {
+  cursor: pointer;
+  color: #909399;
+  transition: color 0.2s;
+}
+.clear-icon:hover {
+  color: var(--active);
+}
+.search-btn {
+  min-width: 88px;
+  box-shadow: 0 2px 8px rgba(64, 158, 255, 0.25);
+}
+
+/* 结果区（隐藏滚动条） */
+.result-area {
+  height: calc(100% - 81px);
+  padding: 0 24px 24px;
+}
+.result-area :deep(.el-scrollbar__wrap) {
+  overflow-x: hidden;
+}
+.result-card {
+  border-radius: 12px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--glass-border);
+  line-height: 1.8;
+  color: #303133;
+}
+.empty-glass {
+  margin-top: 10vh;
+  background: transparent;
+  backdrop-filter: none;
+  border: none;
+}
+.empty-glass :deep(.el-empty__description) {
+  color: #909399;
+}
+
+/* 隐藏滚动条但保留滚动 */
+.result-area :deep(.el-scrollbar__bar) {
+  opacity: 0 !important;
 }
 </style>

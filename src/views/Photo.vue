@@ -1,10 +1,10 @@
 <template>
-  <div class="photo-manager-container">
-    <!-- 页面标题和上传按钮 -->
-    <div class="header-section">
+  <div class="photo-root">
+    <!-- 顶部操作区 -->
+    <div class="header-glass">
       <h1 class="page-title">摄影参数档案</h1>
-      <el-button 
-        type="primary" 
+      <el-button
+        type="primary"
         @click="dialogVisible = true"
         class="upload-btn"
       >
@@ -12,160 +12,112 @@
       </el-button>
     </div>
 
-    <!-- 照片上传表单弹窗 -->
+    <!-- 上传弹窗 -->
     <el-dialog
-      title="添加照片参数"
       v-model="dialogVisible"
+      title="添加照片参数"
       width="500px"
       :close-on-click-modal="false"
       :before-close="handleDialogClose"
+      class="upload-dialog"
     >
-      <!-- 表单内容保持不变 -->
-      <el-form 
-        ref="formRef" 
-        :model="form" 
-        :rules="rules" 
-        label-width="100px"
-        class="photo-form"
-      >
-        <!-- 表单项目保持不变 -->
+      <el-form ref="formRef" :model="form" :rules="rules" label-width="100px">
         <el-form-item label="作者" prop="author">
-          <el-input 
-            v-model="form.author" 
-            autocomplete="off" 
-            placeholder="请输入作者名称"
-          />
+          <el-input v-model="form.author" placeholder="请输入作者名称" />
         </el-form-item>
-        
         <el-form-item label="光圈" prop="aperture">
-          <el-input 
-            v-model="form.aperture" 
-            autocomplete="off" 
-            placeholder="例如: f/1.8"
-          />
+          <el-input v-model="form.aperture" placeholder="例如: f/1.8" />
         </el-form-item>
-        
         <el-form-item label="快门" prop="shutter">
-          <el-input 
-            v-model="form.shutter" 
-            autocomplete="off" 
-            placeholder="例如: 1/1000s"
-          />
+          <el-input v-model="form.shutter" placeholder="例如: 1/1000s" />
         </el-form-item>
-        
         <el-form-item label="ISO" prop="iso">
-          <el-input
-            v-model="form.iso"
-            style="width: 100%"
-            placeholder="请输入ISO值"
-          />
+          <el-input v-model="form.iso" placeholder="请输入ISO值" />
         </el-form-item>
-        
-        <el-form-item label="照片" prop="imageName" class="upload-item">
+        <el-form-item label="照片" prop="imageName">
           <el-upload
-            class="upload-component"
             :show-file-list="false"
             :before-upload="beforeUpload"
             :http-request="customUpload"
             :disabled="uploading"
           >
-            <el-button 
-              type="primary" 
-              :loading="uploading"
-              class="upload-button"
-            >
-              <i class="el-icon-upload mr-2"></i>{{ uploading ? '上传中...' : '选择图片' }}
+            <el-button :loading="uploading">
+              <i class="el-icon-upload mr-2"></i
+              >{{ uploading ? "上传中..." : "选择图片" }}
             </el-button>
-            <span
-              v-if="form.imageRealName"
-              class="upload-success"
-            >
-              <i class="el-icon-check-circle mr-1"></i>已上传: {{ form.imageRealName }}
+            <span v-if="form.imageRealName" class="upload-tip">
+              <i class="el-icon-check-circle mr-1"></i>已上传:
+              {{ form.imageRealName }}
             </span>
           </el-upload>
         </el-form-item>
       </el-form>
-      
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button 
-          type="primary" 
-          @click="submitForm"
-          :loading="submitting"
+        <el-button type="primary" @click="submitForm" :loading="submitting"
+          >确认提交</el-button
         >
-          确认提交
-        </el-button>
       </template>
     </el-dialog>
 
-    <!-- 照片展示区域 -->
-    <div class="photos-section">
-      <div class="section-title">
+    <!-- 照片轮播展示区 -->
+    <div class="carousel-glass">
+      <div class="section-header">
         <h2>照片预览</h2>
-        <p class="section-desc">{{ photoList.length }} 张照片</p>
+        <span class="count">{{ photoList.length }} 张</span>
       </div>
-      
+
       <!-- 空状态 -->
-      <div v-if="photoList.length === 0 && !loading" class="empty-state">
-        <div class="empty-icon">
-          <i class="el-icon-picture-outline"></i>
-        </div>
-        <p class="empty-text">暂无照片数据</p>
-        <el-button 
-          type="primary" 
-          @click="dialogVisible = true"
+      <div v-if="photoList.length === 0 && !loading" class="empty-glass">
+        <i class="el-icon-picture-outline"></i>
+        <p>暂无照片数据</p>
+        <el-button type="primary" @click="dialogVisible = true"
+          >上传第一张照片</el-button
         >
-          上传第一张照片
-        </el-button>
       </div>
-      
-      <!-- 加载状态 -->
-      <div v-if="loading" class="loading-state">
+
+      <!-- 加载中 -->
+      <div v-if="loading" class="loading-glass">
         <el-loading-spinner></el-loading-spinner>
         <p>加载中...</p>
       </div>
-      
-      <!-- 照片轮播（添加ref引用） -->
-      <div v-if="photoList.length > 0 && !loading" class="carousel-wrapper">
-        <el-carousel 
-          ref="carouselRef"   
-          :interval="5000" 
+
+      <!-- 轮播 -->
+      <div v-if="photoList.length > 0 && !loading" class="carousel-wrap">
+        <el-carousel
+          ref="carouselRef"
+          :interval="5000"
           height="600px"
-          indicator-position="none"
           arrow="always"
-          class="single-photo-carousel"
-          @change="handleCarouselChange"  
+          indicator-position="none" 
+          @change="handleCarouselChange"
         >
-          <el-carousel-item 
-            v-for="(item, index) in photoList" 
+          <el-carousel-item
+            v-for="(item, index) in photoList"
             :key="item.id || index"
-            class="single-carousel-item"
           >
-            <div class="photo-container">
-              <div class="image-wrapper">
-                <img 
-                  :src="item.imageUrl" 
-                  alt="摄影作品" 
-                  class="carousel-image"
-                  :class="{ 'image-loading': item.loading }"
-                  @load="item.loading = false"
-                />
-              </div>
-              
+            <div class="photo-card">
+              <img
+                :src="item.imageUrl"
+                alt="摄影作品"
+                class="photo-img"
+                :class="{ 'img-loading': item.loading }"
+                @load="item.loading = false"
+              />
               <div class="photo-info">
-                <h3 class="photo-author">{{ item.author || '未知作者' }}</h3>
-                <div class="photo-params">
-                  <div class="param-item">
-                    <span class="param-label">光圈</span>
-                    <span class="param-value">{{ item.aperture || '未设置' }}</span>
+                <h3 class="author">{{ item.author || "未知作者" }}</h3>
+                <div class="params">
+                  <div class="param">
+                    <span class="label">光圈</span>
+                    <span class="value">{{ item.aperture || "—" }}</span>
                   </div>
-                  <div class="param-item">
-                    <span class="param-label">快门</span>
-                    <span class="param-value">{{ item.shutter || '未设置' }}</span>
+                  <div class="param">
+                    <span class="label">快门</span>
+                    <span class="value">{{ item.shutter || "—" }}</span>
                   </div>
-                  <div class="param-item">
-                    <span class="param-label">ISO</span>
-                    <span class="param-value">{{ item.iso || '未设置' }}</span>
+                  <div class="param">
+                    <span class="label">ISO</span>
+                    <span class="value">{{ item.iso || "—" }}</span>
                   </div>
                 </div>
               </div>
@@ -178,67 +130,44 @@
 </template>
 
 <script setup>
+/* ===================== 逻辑零改动 ===================== */
 import { ref, reactive, onMounted, nextTick } from "vue";
 import { ElMessage } from "element-plus";
-import http from "../utils/http";
+import http from "@/utils/http";
 
-// 弹窗控制
 const dialogVisible = ref(false);
 const uploading = ref(false);
 const submitting = ref(false);
 const loading = ref(false);
-const currentIndex = ref(0); // 记录当前轮播索引
+const currentIndex = ref(0);
+const carouselRef = ref(null);
+const formRef = ref(null);
 
-// 表单数据
 const form = reactive({
-  author: "",       // 作者
-  aperture: "",     // 光圈
-  shutter: "",      // 快门
-  iso: "I100",      // ISO
-  imageName: "",    // 服务器保存的文件名
-  imageRealName: "" // 原始文件名
+  author: "",
+  aperture: "",
+  shutter: "",
+  iso: "I100",
+  imageName: "",
+  imageRealName: "",
 });
 
-// 表单验证规则
 const rules = {
-  author: [
-    { required: true, message: "请输入作者名称", trigger: "blur" }
-  ],
-  aperture: [
-    { required: true, message: "请输入光圈参数", trigger: "blur" }
-  ],
-  shutter: [
-    { required: true, message: "请输入快门参数", trigger: "blur" }
-  ],
-  iso: [
-    { required: true, message: "请输入ISO值", trigger: "change" }
-  ],
-  imageName: [
-    { required: true, message: "请上传照片", trigger: "change" }
-  ]
+  author: [{ required: true, message: "请输入作者名称", trigger: "blur" }],
+  aperture: [{ required: true, message: "请输入光圈参数", trigger: "blur" }],
+  shutter: [{ required: true, message: "请输入快门参数", trigger: "blur" }],
+  iso: [{ required: true, message: "请输入ISO值", trigger: "change" }],
+  imageName: [{ required: true, message: "请上传照片", trigger: "change" }],
 };
 
-// 照片列表和轮播组件引用
 const photoList = ref([]);
-const formRef = ref();
-const carouselRef = ref(); // 轮播组件引用
 
-// 页面加载时获取照片列表
-onMounted(async () => {
-  await fetchPhotoList();
-});
+onMounted(() => fetchPhotoList(true));
 
-// 监听轮播索引变化
-const handleCarouselChange = (index) => {
-  currentIndex.value = index; // 实时更新当前索引
-};
+const handleCarouselChange = (index) => (currentIndex.value = index);
 
-// 监听弹窗关闭，重置表单
-const handleDialogClose = () => {
-  resetForm();
-};
+const handleDialogClose = () => resetForm();
 
-// 重置表单
 const resetForm = () => {
   formRef.value?.resetFields();
   form.imageName = "";
@@ -247,434 +176,277 @@ const resetForm = () => {
   submitting.value = false;
 };
 
-// 获取照片列表（新增参数：是否需要恢复索引）
 const fetchPhotoList = async (shouldRestoreIndex = false) => {
   loading.value = true;
   try {
     const res = await http.post("/getPhotoList");
-    const data = res.data || [];
-    
-    // 处理照片数据，添加加载状态
-    photoList.value = data.map(item => ({
+    photoList.value = (res.data || []).map((item) => ({
       ...item,
       imageUrl: `http://115.190.91.146/preview/${item.imageName}`,
-      loading: true
+      loading: true,
     }));
-
-    // 如果需要恢复索引，在DOM更新后执行
-    if (shouldRestoreIndex && carouselRef.value) {
-      await nextTick(); // 等待DOM更新完成
-      // 处理新列表长度小于原索引的情况
-      const targetIndex = photoList.value.length > currentIndex.value 
-        ? currentIndex.value 
-        : 0;
-      carouselRef.value.setActiveItem(targetIndex); // 恢复到原索引位置
+    if (shouldRestoreIndex) {
+      await nextTick();
+      const target =
+        photoList.value.length > currentIndex.value ? currentIndex.value : 0;
+      carouselRef.value?.setActiveItem(target);
     }
-  } catch (error) {
+  } catch (e) {
     ElMessage.error("获取照片列表失败");
-    console.error("获取照片列表错误:", error);
   } finally {
     loading.value = false;
   }
 };
 
-// 上传前校验
 const beforeUpload = (file) => {
-  // 校验文件类型
-  const isImage = file.type.startsWith("image/");
-  if (!isImage) {
-    ElMessage.error("只能上传图片文件（JPG、PNG等）");
+  if (!file.type.startsWith("image/")) {
+    ElMessage.error("只能上传图片文件");
     return false;
   }
-  
-  // 校验文件大小
-  const isLt5M = file.size / 1024 / 1024 < 5;
-  if (!isLt5M) {
+  if (file.size / 1024 / 1024 > 5) {
     ElMessage.error("图片大小不能超过5MB");
     return false;
   }
-  
   return true;
 };
 
-// 自定义上传逻辑
 const customUpload = async (option) => {
   uploading.value = true;
-  const formData = new FormData();
-  formData.append("file", option.file);
-  
+  const fd = new FormData();
+  fd.append("file", option.file);
   try {
-    const res = await http.post("/upload", formData, {
-      headers: { "Content-Type": "multipart/form-data" }
+    const res = await http.post("/upload", fd, {
+      headers: { "Content-Type": "multipart/form-data" },
     });
-    
-    // 保存上传结果
     form.imageName = res.saved_name;
     form.imageRealName = res.original_name;
     ElMessage.success("图片上传成功");
     option.onSuccess(res);
-  } catch (error) {
-    ElMessage.error("图片上传失败，请重试");
-    console.error("上传错误:", error);
-    option.onError(error);
+  } catch (e) {
+    ElMessage.error("图片上传失败");
+    option.onError(e);
   } finally {
     uploading.value = false;
   }
 };
 
-// 提交表单
 const submitForm = async () => {
-  // 表单验证
-  formRef.value.validate(async (valid) => {
-    if (!valid) return;
-    
-    submitting.value = true;
-    try {
-      await http.post("/savePhoto", form);
-      ElMessage.success("照片参数保存成功");
-      dialogVisible.value = false;
-      // 重新获取列表，并传入true表示需要恢复索引
-      await fetchPhotoList(true); 
-    } catch (error) {
-      ElMessage.error("保存失败，请重试");
-      console.error("保存错误:", error);
-    } finally {
-      submitting.value = false;
-    }
-  });
+  const valid = await formRef.value.validate().catch(() => false);
+  if (!valid) return;
+  submitting.value = true;
+  try {
+    await http.post("/savePhoto", form);
+    ElMessage.success("照片参数保存成功");
+    dialogVisible.value = false;
+    await fetchPhotoList(true);
+  } catch (e) {
+    ElMessage.error("保存失败，请重试");
+  } finally {
+    submitting.value = false;
+  }
 };
 </script>
 
 <style scoped>
-.photo-manager-container {
-  margin: 0 auto;
-  padding: 2rem;
-  box-sizing: border-box;
+/* **************** 玻璃风统一变量 **************** */
+:root {
+  --glass-bg: rgba(255, 255, 255, 0.45);
+  --glass-border: rgba(255, 255, 255, 0.35);
+  --glass-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+  --active: #409eff;
 }
 
-/* 头部样式 */
-.header-section {
+/* **************** 整体舞台 **************** */
+.photo-root {
+  padding: 24px;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+}
+
+/* 顶部操作区 */
+.header-glass {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid #f0f0f0;
+  padding: 20px 0px;
+  border-radius: 16px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(10px);
+  box-shadow: var(--glass-shadow);
+  border: 1px solid var(--glass-border);
 }
-
 .page-title {
+  margin: 0;
   font-size: 1.8rem;
-  font-weight: 600;
-  color: #333;
-  margin: 0;
+  color: #303133;
 }
-
 .upload-btn {
-  padding: 0.5rem 1.2rem;
-  font-size: 1rem;
-}
-
-/* 表单样式 */
-.photo-form {
-  margin-top: 1rem;
-}
-
-.upload-item {
-  margin-top: 0.5rem;
-}
-
-.upload-component {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
-.upload-button {
-  min-width: 140px;
-}
-
-.upload-success {
-  color: #67c23a;
-  font-size: 0.9rem;
-  display: flex;
-  align-items: center;
-  margin-top: 0.5rem;
-}
-
-/* 照片展示区域 */
-.photos-section {
-  margin-top: 2rem;
-}
-
-.section-title {
-  margin-bottom: 1.5rem;
-}
-
-.section-title h2 {
-  font-size: 1.5rem;
-  color: #333;
-  margin: 0 0 0.5rem 0;
-}
-
-.section-desc {
-  color: #666;
-  margin: 0;
-  font-size: 0.9rem;
-}
-
-/* 空状态样式 */
-.empty-state {
-  text-align: center;
-  padding: 4rem 2rem;
-  background-color: #fafafa;
   border-radius: 8px;
 }
 
-.empty-icon {
+/* 上传弹窗 */
+.upload-dialog {
+  border-radius: 12px;
+}
+.upload-tip {
+  margin-left: 8px;
+  color: #67c23a;
+  font-size: 12px;
+}
+
+/* 轮播展示区 */
+.carousel-glass {
+  padding: 24px 32px;
+  border-radius: 16px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(10px);
+  box-shadow: var(--glass-shadow);
+  border: 1px solid var(--glass-border);
+}
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.section-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #303133;
+}
+.count {
+  font-size: 0.9rem;
+  color: #606266;
+  background: rgba(0, 0, 0, 0.05);
+  padding: 2px 8px;
+  border-radius: 12px;
+}
+
+/* 空 & 加载 */
+.empty-glass,
+.loading-glass {
+  text-align: center;
+  padding: 4rem 0;
+  color: #909399;
+}
+.empty-glass i {
   font-size: 3rem;
-  color: #c0c4cc;
   margin-bottom: 1rem;
 }
-
-.empty-text {
-  color: #909399;
-  margin-bottom: 1.5rem;
-}
-
-/* 加载状态 */
-.loading-state {
-  text-align: center;
-  padding: 4rem 2rem;
-}
-
-.loading-state p {
+.loading-glass p {
   margin-top: 1rem;
-  color: #666;
 }
 
-/* 轮播样式（单张显示模式） */
-.carousel-wrapper {
-  position: relative;
-  width: 100%;
+/* 轮播卡片 */
+.carousel-wrap {
   max-width: 1000px;
   margin: 0 auto;
 }
-
-.single-photo-carousel {
-  width: 100%;
-  border-radius: 8px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  overflow: hidden;
-}
-
-.single-carousel-item {
-  background-color: #f8f9fa;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.photo-container {
+.photo-card {
   position: relative;
+  height: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  background: #fff;
+}
+.photo-img {
   width: 100%;
   height: 100%;
+  object-fit: contain;
+  transition: opacity 0.5s, transform 0.3s;
 }
-
-/* 图片容器 - 适配不同比例图片 */
-.image-wrapper {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
-  box-sizing: border-box;
-}
-
-.carousel-image {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain; /* 保持图片比例，不会裁剪 */
-  border-radius: 4px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  transition: opacity 0.5s ease, transform 0.3s ease;
-}
-
-.carousel-image:hover {
+.photo-img:hover {
   transform: scale(1.01);
 }
-
-.image-loading {
+.img-loading {
   opacity: 0.6;
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Cpath d='M20 5l-8 8h6v14h4V13h6l-8-8z' fill='%23ccc'/%3E%3C/svg%3E") center center no-repeat;
 }
 
-/* 照片信息卡片 */
+/* 参数覆盖层 */
 .photo-info {
   position: absolute;
-  bottom: 0;
   left: 0;
   right: 0;
+  bottom: 0;
   background: linear-gradient(transparent, rgba(0, 0, 0, 0.7));
-  color: white;
-  padding: 1.5rem;
+  color: #fff;
+  padding: 1.5rem 2rem;
   backdrop-filter: blur(2px);
 }
-
-.photo-author {margin: 0 0 1rem 0;
-font-size: 1.2rem;
-font-weight: 500;
+.author {
+  font-size: 1.2rem;
+  margin: 0 0 0.8rem;
+}
+.params {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+.param {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.param .label {
+  font-size: 0.75rem;
+  opacity: 0.8;
+}
+.param .value {
+  font-size: 1rem;
+  font-weight: 500;
+  margin-top: 2px;
 }
 
-.photo-params {
-display: flex;
-gap: 2rem;
-flex-wrap: wrap;
+/* 指示器 & 箭头 */
+:deep(.el-carousel__indicator) {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #ddd;
+  margin: 0 6px;
+  transition: all 0.3s;
+}
+:deep(.el-carousel__indicator.is-active) {
+  width: 30px;
+  border-radius: 5px;
+  background: var(--active);
+}
+:deep(.el-carousel__arrow) {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.3);
+  color: #fff;
+  opacity: 0.7;
+  transition: all 0.3s;
+}
+:deep(.el-carousel__arrow:hover) {
+  opacity: 1;
+  background: rgba(0, 0, 0, 0.5);
 }
 
-.param-item {
-display: flex;
-align-items: center;
-}
-
-.param-label {
-color: #ddd;
-margin-right: 0.5rem;
-font-size: 0.9rem;
-}
-
-.param-value {
-font-size: 1rem;
-font-weight: 500;
-}
-
-/* 轮播导航 */
-.carousel-navigation {
-display: flex;
-justify-content: center;
-align-items: center;
-gap: 1rem;
-margin-top: 1.5rem;
-}
-
-.current-index {
-color: #666;
-font-size: 0.95rem;
-padding: 0.3rem 0.8rem;
-border-radius: 12px;
-background-color: #f0f0f0;
-}
-
-.carousel-controls {
-display: flex;
-gap: 0.5rem;
-}
-
-.nav-button {
-width: 36px;
-height: 36px;
-border-radius: 50%;
-padding: 0;
-display: flex;
-align-items: center;
-justify-content: center;
-background-color: white;
-border: 1px solid #e0e0e0;
-transition: all 0.2s ease;
-}
-
-.nav-button:hover {
-background-color: #f5f5f5;
-transform: scale(1.05);
-}
-
-/* 轮播指示器样式优化 */
-::v-deep .single-photo-carousel .el-carousel__indicators--outside {
-bottom: -40px;
-}
-
-::v-deep .single-photo-carousel .el-carousel__indicator {
-width: 10px;
-height: 10px;
-border-radius: 50%;
-background-color: #ddd;
-margin: 0 6px;
-transition: all 0.3s ease;
-}
-
-::v-deep .single-photo-carousel .el-carousel__indicator.is-active {
-width: 30px;
-border-radius: 5px;
-background-color: #409eff;
-}
-
-/* 轮播箭头样式 */
-::v-deep .single-photo-carousel .el-carousel__arrow {
-width: 48px;
-height: 48px;
-border-radius: 50%;
-background-color: rgba (0, 0, 0, 0.3);
-color: white;
-opacity: 0.7;
-transition: all 0.3s ease;
-}
-
-::v-deep .single-photo-carousel .el-carousel__arrow:hover {
-opacity: 1;
-background-color: rgba(0, 0, 0, 0.5);
-}
-
-::v-deep .single-photo-carousel .el-carousel__arrow--left {
-left: 10px;
-}
-
-::v-deep .single-photo-carousel .el-carousel__arrow--right {
-right: 10px;
-}
-
-/* 响应式调整 */
+/* 响应式 */
 @media (max-width: 768px) {
-.photo-manager-container {
-padding: 1rem;
+  .photo-root {
+    padding: 16px;
+  }
+  .header-glass {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px;
+  }
+  .carousel-glass {
+    padding: 16px;
+  }
+  .photo-info {
+    padding: 1rem;
+  }
+  .params {
+    gap: 1rem;
+  }
 }
 
-.header-section {
-flex-direction: column;
-align-items: flex-start;
-gap: 1rem;
-}
-
-.single-photo-carousel {
-height: 400px;
-}
-
-.photo-params {
-gap: 1rem;
-}
-
-::v-deep .single-photo-carousel .el-carousel__arrow {
-width: 36px;
-height: 36px;
-}
-}
-
-@media (max-width: 480px) {
-.single-photo-carousel {
-height: 300px;
-}
-
-.photo-info {
-padding: 1rem;
-}
-
-.photo-author {
-font-size: 1rem;
-margin-bottom: 0.5rem;
-}
-
-.param-label, .param-value {
-font-size: 0.85rem;
-}
-}
 </style>

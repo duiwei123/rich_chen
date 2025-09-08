@@ -1,84 +1,63 @@
 <template>
-  <div class="login-container">
-    <div class="login-wrapper">
-      <!-- 左侧登录表单 -->
-      <div class="login-left">
-        <div class="login-logo">
+  <div class="login-root">
+    <div class="login-glass">
+      <!-- 左侧表单 -->
+      <div class="form-side">
+        <div class="logo">
           <h1>PhotoShare</h1>
           <p>分享生活中的美好瞬间</p>
         </div>
-        
-        <el-card class="login-card">
-          <h3 class="card-title">欢迎回来</h3>
-          
-          <el-form
-            :model="loginForm"
-            :rules="rules"
-            ref="loginFormRef"
-            label-width="100px"
-            class="login-form"
-          >
-            <el-form-item label="用户名" prop="username">
-              <el-input
-                v-model="loginForm.username"
-                placeholder="请输入用户名"
-                @keyup.enter.native="handleLogin"
-              >
-                <template #prefix>
-                  <i class="el-icon-user"></i>
-                </template>
-              </el-input>
-            </el-form-item>
-            
-            <el-form-item label="密码" prop="password">
-              <el-input
-                type="password"
-                v-model="loginForm.password"
-                placeholder="请输入密码"
-                @keyup.enter.native="handleLogin"
-              >
-                <template #prefix>
-                  <i class="el-icon-lock"></i>
-                </template>
-              </el-input>
-            </el-form-item>
-            
-            <el-form-item>
-              <el-button
-                type="primary"
-                class="login-btn"
-                @click="handleLogin"
-                :loading="loading"
-              >
-                登录
-              </el-button>
-            </el-form-item>
-          </el-form>
-          
-          <div class="login-options">
-            <span class="remember-me">
-              <!-- <el-checkbox v-model="rememberMe">记住密码</el-checkbox> -->
-            </span>
-            <a href="#" class="forgot-password">忘记密码?</a>
-          </div>
-          
-          <!-- <div class="social-login">
-            <p>其他登录方式</p>
-            <div class="social-icons">
-              <el-button circle icon="el-icon-weixin"></el-button>
-              <el-button circle icon="el-icon-qq"></el-button>
-              <el-button circle icon="el-icon-weibo"></el-button>
-            </div>
-          </div> -->
-        </el-card>
+
+        <el-form
+          :model="loginForm"
+          :rules="rules"
+          ref="loginFormRef"
+          class="login-form"
+        >
+          <el-form-item prop="username">
+            <el-input
+              v-model="loginForm.username"
+              placeholder="请输入用户名"
+              @keyup.enter="handleLogin"
+            >
+              <template #prefix><el-icon><User /></el-icon></template>
+            </el-input>
+          </el-form-item>
+
+          <el-form-item prop="password">
+            <el-input
+              type="password"
+              v-model="loginForm.password"
+              placeholder="请输入密码"
+              @keyup.enter="handleLogin"
+            >
+              <template #prefix><el-icon><Lock /></el-icon></template>
+            </el-input>
+          </el-form-item>
+
+          <el-form-item>
+            <el-button
+              type="primary"
+              class="login-btn"
+              @click="handleLogin"
+              :loading="loading"
+            >
+              登录
+            </el-button>
+          </el-form-item>
+        </el-form>
+
+        <div class="options">
+          <a href="#" class="link">忘记密码？</a>
+        </div>
       </div>
-      
-      <!-- 右侧图片区域 -->
-      <div class="login-right">
-        <div class="image-content">
+
+      <!-- 右侧欢迎 -->
+      <div class="welcome-side">
+        <div class="welcome-content">
           <h2>探索无限可能</h2>
           <p>加入我们，分享您的精彩瞬间</p>
-          <el-button type="primary" plain class="register-btn">立即注册</el-button>
+          <el-button plain class="reg-btn">立即注册</el-button>
         </div>
       </div>
     </div>
@@ -86,17 +65,12 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue';
-import { ElMessage } from 'element-plus';
-import http from "../utils/http";
+/* =============== 以下逻辑完全不变 =============== */
+import { ref, reactive, onMounted } from 'vue'
+import { ElMessage } from 'element-plus'
+import http from '@/utils/http'
 
-// 表单数据
-const loginForm = reactive({
-  username: '',
-  password: ''
-});
-
-// 表单验证规则
+const loginForm = reactive({ username: '', password: '' })
 const rules = reactive({
   username: [
     { required: true, message: '请输入用户名', trigger: 'blur' },
@@ -106,245 +80,105 @@ const rules = reactive({
     { required: true, message: '请输入密码', trigger: 'blur' },
     { min: 3, message: '密码至少6个字符', trigger: 'blur' }
   ]
-});
+})
+const loading = ref(false)
+const loginFormRef = ref(null)
 
-// 登录状态
-const loading = ref(false);
-const rememberMe = ref(false);
-const loginFormRef = ref(null);
-
-// 处理登录
 const handleLogin = () => {
-  loginFormRef.value.validate(async (valid) => {
-    if (valid) {
-      loading.value = true;
-      
-      try {
-        const response = await http.post('/login', loginForm);
-        console.log("response.code"+response.code)
-        if (response.code === 200) {
-          // 登录成功
-          localStorage.setItem('token', response.token);
-          localStorage.setItem('name', response.name);
-          localStorage.setItem('headPhoto', response.headImg);
-          
-          ElMessage.success('登录成功，正在跳转...');
-          
-          // 延迟跳转，给用户提示时间
-          setTimeout(() => {
-            window.location.href = '/';
-          }, 700);
-        } else {
-          // 登录失败
-          ElMessage.error(response.message || '用户名或密码错误');
-        }
-      } catch (error) {
-        // 网络错误
-        ElMessage.error('网络连接失败，请稍后重试');
-        console.error(error);
-      } finally {
-        loading.value = false;
+  loginFormRef.value.validate(async valid => {
+    if (!valid) return ElMessage.warning('请完善登录信息')
+    loading.value = true
+    try {
+      const res = await http.post('/login', loginForm)
+      if (res.code === 200) {
+        localStorage.setItem('token', res.token)
+        localStorage.setItem('name', res.name)
+        localStorage.setItem('headPhoto', res.headImg)
+        ElMessage.success('登录成功，正在跳转...')
+        setTimeout(() => (window.location.href = '/'), 700)
+      } else {
+        ElMessage.error(res.message || '用户名或密码错误')
       }
-    } else {
-      ElMessage.warning('请完善登录信息');
-      return false;
+    } catch (e) {
+      ElMessage.error('网络连接失败，请稍后重试')
+      console.error(e)
+    } finally {
+      loading.value = false
     }
-  });
-};
+  })
+}
 
-// 页面加载时检查是否记住密码
 onMounted(() => {
   if (localStorage.getItem('rememberMe') === 'true') {
-    loginForm.username = localStorage.getItem('username') || '';
-    loginForm.password = localStorage.getItem('password') || '';
-    rememberMe.value = true;
+    loginForm.username = localStorage.getItem('username') || ''
+    loginForm.password = localStorage.getItem('password') || ''
   }
-});
+})
 </script>
 
 <style scoped>
-/* 整体容器 */
-.login-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-  background-color: #f5f7fa;
+
+/* **************** 玻璃风统一变量 **************** */
+:root{
+  --glass-bg:rgba(255,255,255,.45);
+  --glass-border:rgba(255,255,255,.35);
+  --glass-shadow:0 8px 32px rgba(31,38,135,.15);
+  --active:#409EFF;
 }
 
-.login-wrapper {
-  display: flex;
-  width: 900px;
-  height: 550px;
-  border-radius: 10px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
+/* **************** 整体舞台 **************** */
+.login-root{
+  min-height:100vh;
+  display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,#f5f7fa 0%,#c3cfe2 100%);
+  padding:20px;
 }
 
-/* 左侧登录区域 */
-.login-left {
-  flex: 1;
-  padding: 40px;
-  background-color: white;
-  display: flex;
-  flex-direction: column;
+/* 玻璃面板 */
+.login-glass{
+  width:900px;max-width:90%;
+  display:flex;border-radius:20px;
+  background:var(--glass-bg);
+  backdrop-filter:blur(12px);
+  box-shadow:var(--glass-shadow);
+  border:1px solid var(--glass-border);
+  overflow:hidden;
 }
 
-.login-logo {
-  margin-bottom: 30px;
-  text-align: center;
+/* 左侧表单 */
+.form-side{
+  flex:1;padding:48px 56px;
+  display:flex;flex-direction:column;justify-content:center;
+}
+.logo{margin-bottom:32px;text-align:center}
+.logo h1{font-size:28px;color:var(--active);margin:0 0 8px}
+.logo p{font-size:14px;color:#606266}
+
+.login-form .el-form-item{margin-bottom:20px}
+.login-btn{width:100%;height:44px;font-size:16px;border-radius:8px}
+.options{text-align:right;font-size:13px}
+.link{color:var(--active);text-decoration:none}
+.link:hover{text-decoration:underline}
+
+/* 右侧欢迎 */
+.welcome-side{
+  flex:1;
+  background:linear-gradient(135deg,var(--active) 0%,#7cb305 100%);
+  display:flex;align-items:center;justify-content:center;
+  position:relative;
+}
+.welcome-content{color:#fff;text-align:center;padding:40px}
+.welcome-content h2{font-size:32px;font-weight:600;margin:0 0 12px}
+.welcome-content p{font-size:16px;margin:0 0 32px;opacity:.9}
+.reg-btn{padding:10px 32px;font-size:16px;border-color:#fff;color:#fff}
+.reg-btn:hover{background:#fff;color:var(--active)}
+
+/* **************** 响应式 **************** */
+@media(max-width:768px){
+  .login-glass{flex-direction:column}
+  .form-side{padding:36px 24px}
+  .welcome-side{padding:40px 24px}
 }
 
-.login-logo h1 {
-  color: #409eff;
-  font-size: 28px;
-  margin-bottom: 10px;
-}
 
-.login-logo p {
-  color: #606266;
-  font-size: 14px;
-}
-
-.login-card {
-  flex: 1;
-  border: none;
-  box-shadow: none;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
-.card-title {
-  font-size: 24px;
-  font-weight: 500;
-  color: #303133;
-  margin-bottom: 30px;
-  text-align: center;
-}
-
-.login-form {
-  margin-top: 20px;
-}
-
-.login-btn {
-  width: 100%;
-  height: 40px;
-  font-size: 16px;
-}
-
-.login-options {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 20px;
-  font-size: 14px;
-}
-
-.remember-me {
-  color: #606266;
-}
-
-.forgot-password {
-  color: #409eff;
-  cursor: pointer;
-}
-
-.social-login {
-  margin-top: 30px;
-  text-align: center;
-}
-
-.social-login p {
-  color: #909399;
-  font-size: 14px;
-  margin-bottom: 15px;
-}
-
-.social-icons {
-  display: flex;
-  justify-content: center;
-  gap: 15px;
-}
-
-.social-icons .el-button {
-  width: 40px;
-  height: 40px;
-  line-height: 40px;
-  text-align: center;
-  border-radius: 50%;
-  background-color: #f5f7fa;
-  color: #606266;
-  transition: all 0.3s;
-}
-
-.social-icons .el-button:hover {
-  background-color: #409eff;
-  color: white;
-}
-
-/* 右侧图片区域 */
-.login-right {
-  flex: 1;
-  background: linear-gradient(135deg, #409eff 0%, #7cb305 100%);
-  position: relative;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.image-content {
-  text-align: center;
-  color: white;
-  padding: 40px;
-  z-index: 10;
-}
-
-.image-content h2 {
-  font-size: 32px;
-  font-weight: 600;
-  margin-bottom: 20px;
-}
-
-.image-content p {
-  font-size: 16px;
-  margin-bottom: 40px;
-  line-height: 1.6;
-}
-
-.register-btn {
-  padding: 10px 30px;
-  font-size: 16px;
-  color: white;
-  border-color: white;
-  transition: all 0.3s;
-}
-
-.register-btn:hover {
-  background-color: white;
-  color: #409eff;
-}
-
-/* 背景装饰 */
-.login-right::before {
-  content: '';
-  position: absolute;
-  top: -50px;
-  right: -50px;
-  width: 200px;
-  height: 200px;
-  border-radius: 50%;
-  background-color: rgba(255, 255, 255, 0.1);
-}
-
-.login-right::after {
-  content: '';
-  position: absolute;
-  bottom: -100px;
-  left: -100px;
-  width: 300px;
-  height: 300px;
-  border-radius: 50%;
-  background-color: rgba(255, 255, 255, 0.1);
-}
 </style>
