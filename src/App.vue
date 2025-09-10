@@ -138,6 +138,7 @@ export default {
         { path: "/messageList", name: "消息列表" },
         { path: "/homePage", name: "首页" },
         { path: "/markDownPage", name: "mark" },
+        { path: "/news", name:"新闻"}
       ];
     },
   },

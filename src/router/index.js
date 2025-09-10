@@ -8,6 +8,7 @@ import MessageList from '../views/Message.vue'
 import HomePage from '../views/HomePage.vue'
 import MarkDown  from '../views/MarkDown.vue';
 import MarkDownPage from '../views/markDowm/MarkDownPage.vue';
+import News from '../views/News.vue';
 import { pa } from 'element-plus/es/locales.mjs';
 import component from 'element-plus/es/components/tree-select/src/tree-select-option.mjs';
 
@@ -60,7 +61,12 @@ const routes = [
     path: '/markDownPage',
     name: 'MarkDownPage',
     component: MarkDownPage
-  }
+  },
+    {
+    path: '/news',
+    name: 'News',
+    component: News
+  },
 ];
 
 const router = createRouter({
