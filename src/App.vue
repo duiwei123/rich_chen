@@ -2,7 +2,7 @@
   <div class="app-root">
     <!-- 侧边栏 -->
     <aside v-if="!isLoginPage" class="side-glass">
-      <div class="logo">LOGO</div>
+      <div class="logo"><img src="/src/assets/logo.png" style="width: 120px;"> </div>
       <nav>
         <router-link
           v-for="route in navRoutes"
@@ -131,14 +131,13 @@ export default {
     },
     navRoutes() {
       return [
-        { path: "/", name: "首页" },
-        { path: "/user-management", name: "用户管理" },
-        { path: "/order", name: "流水管理" },
+        { path: "/", name: this.name + "的兴趣小首页" },
+        // { path: "/user-management", name: "用户管理" },
+        // { path: "/order", name: "流水管理" },
         { path: "/photo", name: "菜鸟的地球观察日记" },
-        { path: "/messageList", name: "消息列表" },
-        { path: "/homePage", name: "首页" },
-        { path: "/markDownPage", name: "mark" },
-        { path: "/news", name:"新闻"}
+        { path: "/messageList", name: "路人甲的待回留言本" },
+        { path: "/markDownPage", name: "小白的碎片笔记手账" },
+        { path: "/news", name:"吃瓜人的日常新闻录"}
       ];
     },
   },
@@ -269,7 +268,7 @@ nav a:hover {
 }
 nav a.active {
   background: var(--active);
-  color: #fff;
+  /* color: #fff; */
   box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3);
 }
 nav a:last-child {

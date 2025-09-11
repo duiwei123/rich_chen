@@ -36,7 +36,7 @@
           type="textarea"
           :rows="3"
           placeholder="请输入留言内容..."
-          class="msg-input"/>
+          class="msg-input" style="min-height: 256px;"/>
         <el-button
           type="primary"
           size="small"
@@ -48,7 +48,7 @@
         </el-button>
 
         <el-alert
-          v-show="messageSubmitted"
+          v-if="messageSubmitted"
           title="提交成功！感谢您的留言"
           type="success"
           :closable="false"
@@ -264,7 +264,7 @@ export default {
 .skeleton{height:150px}
 
 /* 统一 element 覆盖 */
-:deep(.el-textarea__inner){resize:none;font-size:12px;padding:8px}
+:deep(.el-textarea__inner){resize:none;font-size:12px;padding:8px; min-height: 230px !important;}
 :deep(.el-radio){margin:0}
 :deep(.el-radio__label){font-size:12px}
 </style>

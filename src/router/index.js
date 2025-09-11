@@ -5,9 +5,11 @@ import Order from '../views/Order.vue';
 import Login from '../views/Login.vue';
 import Photo from '../views/Photo.vue';
 import MessageList from '../views/Message.vue'
-import HomePage from '../views/HomePage.vue'
 import MarkDown  from '../views/MarkDown.vue';
 import MarkDownPage from '../views/markDowm/MarkDownPage.vue';
+import MarkDownDetail from '../views/markDowm/MarkDownDetail.vue';
+import MarkDownEdit from '../views/markDowm/MarkDownEdit.vue';
+import MarkDownEdit1 from '../views/markDowm/MarkDownEdit.vue';
 import News from '../views/News.vue';
 import { pa } from 'element-plus/es/locales.mjs';
 import component from 'element-plus/es/components/tree-select/src/tree-select-option.mjs';
@@ -48,11 +50,6 @@ const routes = [
     component: MessageList
   },
   {
-    path: '/homePage',
-    name: 'HomePage',
-    component: HomePage
-  },
-  {
     path: '/markDown',
     name: 'MarkDown',
     component: MarkDown
@@ -61,6 +58,20 @@ const routes = [
     path: '/markDownPage',
     name: 'MarkDownPage',
     component: MarkDownPage
+  },
+  {
+    path: '/markDownDetail/:id',
+    name: 'MarkDownDetail',
+    component: MarkDownDetail
+  },{
+    path: '/markDownEdit/:id',
+    name: 'MarkDownEdit',
+    component: MarkDownEdit
+  },
+  {
+    path: '/markDownEdit',
+    name: 'MarkDownEdit1',
+    component: MarkDownEdit1
   },
     {
     path: '/news',
