@@ -87,7 +87,7 @@
         <el-carousel
           ref="carouselRef"
           :interval="5000"
-          height="600px"
+          height="666px"
           arrow="always"
           indicator-position="none" 
           @change="handleCarouselChange"
@@ -297,7 +297,7 @@ const submitForm = async () => {
 
 /* 轮播展示区 */
 .carousel-glass {
-  padding: 24px 32px;
+  padding: 0 32px;
   border-radius: 16px;
   background: var(--glass-bg);
   backdrop-filter: blur(10px);
@@ -353,7 +353,6 @@ const submitForm = async () => {
 }
 .photo-img {
   width: 100%;
-  height: 100%;
   object-fit: contain;
   transition: opacity 0.5s, transform 0.3s;
 }
@@ -370,7 +369,7 @@ const submitForm = async () => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(transparent, rgba(0, 0, 0, 0.7));
+  /* background: linear-gradient(transparent, rgba(0, 0, 0, 0.7)); */
   color: #fff;
   padding: 1.5rem 2rem;
   backdrop-filter: blur(2px);

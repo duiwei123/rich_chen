@@ -36,7 +36,15 @@
           type="textarea"
           :rows="3"
           placeholder="请输入留言内容..."
-          class="msg-input" style="min-height: 256px;"/>
+          class="msg-input" />
+
+          <el-alert
+          v-if="messageSubmitted"
+          title="提交成功！感谢您的留言"
+          type="success"
+          :closable="false"
+          class="msg-success"/>
+          
         <el-button
           type="primary"
           size="small"
@@ -47,12 +55,7 @@
           提交留言
         </el-button>
 
-        <el-alert
-          v-if="messageSubmitted"
-          title="提交成功！感谢您的留言"
-          type="success"
-          :closable="false"
-          class="msg-success"/>
+        
       </div>
 
       <!-- 日历 -->

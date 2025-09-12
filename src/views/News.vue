@@ -15,61 +15,60 @@
       </div>
     </header>
 
-    <!-- 内容区（隐藏滚动条） -->
-    <main class="content-glass">
-      <el-scrollbar>
-        <!-- 空状态 -->
-        <el-empty
-          v-if="!loading && list.length === 0"
-          description="暂无数据"
-          class="empty-glass"
-        />
+    <!-- ****** 关键改动：整屏切换动画 ****** -->
+    <transition name="fade-slide" mode="out-in">
+      <!-- key 强制 Vue 重新挂载节点，避免旧列表动画 -->
+      <main class="content-glass" :key="activeTab">
+        <el-scrollbar>
+          <el-empty
+            v-if="!loading && list.length === 0"
+            description="暂无数据"
+            class="empty-glass"
+          />
 
-        <!-- 瀑布流列表 -->
-        <transition-group name="drop" tag="div" class="waterfall">
-          <div
-            v-for="item in list"
-            :key="item.id"
-            class="item-glass"
-            :style="{ '--delay': item.id * 30 + 'ms' }"
-          >
-            <!-- 封面图 -->
-            <img
-              v-if="item.image"
-              :src="item.image"
-              class="cover-img"
-              @click="showDetail(item)"
-            />
-            <!-- 内容 -->
-            <div class="body">
-              <h3 class="title" @click="handleTitle(item)">
-                {{ item.title }}
-              </h3>
-              <p class="desc">{{ item.description }}</p>
-              <div class="footer">
-                <span class="source">{{ item.source }}</span>
-                <span class="time">{{ item.time }}</span>
+          <!-- 瀑布流：去掉 transition-group，普通 div 即可 -->
+          <div class="waterfall">
+            <div
+              v-for="item in list"
+              :key="item.id"
+              class="item-glass"
+            >
+              <img
+                v-if="item.image"
+                :src="item.image"
+                class="cover-img"
+                @click="showDetail(item)"
+              />
+              <div class="body">
+                <h3 class="title" @click="handleTitle(item)">
+                  {{ item.title }}
+                </h3>
+                <p class="desc">{{ item.description }}</p>
+                <div class="footer">
+                  <span class="source">{{ item.source }}</span>
+                  <span class="time">{{ item.time }}</span>
+                </div>
               </div>
             </div>
           </div>
-        </transition-group>
 
-        <!-- 加载更多 -->
-        <div class="load-more">
-          <el-button
-            v-if="hasMore"
-            :loading="loading"
-            round
-            @click="loadMore"
-          >
-            加载更多
-          </el-button>
-          <span v-else class="no-more">已经到底啦 ~</span>
-        </div>
-      </el-scrollbar>
-    </main>
+          <!-- 加载更多 -->
+          <div class="load-more">
+            <el-button
+              v-if="hasMore"
+              :loading="loading"
+              round
+              @click="loadMore"
+            >
+              加载更多
+            </el-button>
+            <span v-else class="no-more">已经到底啦 ~</span>
+          </div>
+        </el-scrollbar>
+      </main>
+    </transition>
 
-    <!-- 图文弹窗（已修复绑定） -->
+    <!-- 图文弹窗 -->
     <el-dialog
       v-model="visible60s"
       :title="detail.title"
@@ -80,6 +79,7 @@
     >
       <img v-if="detail.image" :src="detail.image" style="width: 100%;" class="detail-img" />
       <div class="detail-body" v-html="detail.content"></div>
+      <template #footer>
         <el-button @click="visible60s = false">关闭</el-button>
         <el-button
           v-if="detail.url"
@@ -88,6 +88,7 @@
         >
           查看原文
         </el-button>
+      </template>
     </el-dialog>
   </div>
 </template>
@@ -107,7 +108,7 @@ export default {
         { key: "bili", name: "B 站热榜" },
         { key: "baidu/realtime", name: "百度实时" },
         { key: "ncm-rank", name: "网易云热歌" },
-        { key: "hacker-news/top", name: "Hacker News" },
+        { key: "hacker-news/news", name: "Hacker News" },
       ],
       list: [],
       loading: false,
@@ -121,16 +122,13 @@ export default {
     this.fetchNews();
   },
   methods: {
-    /* -------- 切换分类 -------- */
     switchTab(key) {
+      this.list = [];
       this.activeTab = key;
       this.page = 1;
-      this.list = [];
       this.hasMore = true;
       this.fetchNews();
     },
-
-    /* -------- 获取列表（原生 fetch，绕过封装） -------- */
     async fetchNews() {
       this.loading = true;
       try {
@@ -139,7 +137,6 @@ export default {
         const raw = json.data || [];
         const mapped = raw.map((it, idx) => this.mapFields(it, idx));
         this.list.push(...mapped);
-        console.log(this.list);
         this.hasMore = mapped.length === 20;
       } catch (e) {
         this.$message.error("获取数据失败");
@@ -147,10 +144,8 @@ export default {
         this.loading = false;
       }
     },
-
-    /* -------- 字段映射（处理不同平台差异） -------- */
     mapFields(it, idx) {
-      const base = {
+      return {
         id: it.id || it.tid || idx,
         title: it.title || it.word || it.text || "无标题",
         description: it.description || it.summary || it.content || "",
@@ -159,17 +154,12 @@ export default {
         source: it.source || this.activeTab,
         url: it.url || it.link || "",
       };
-      return base;
     },
-
-    /* -------- 加载更多 -------- */
     loadMore() {
       if (this.loading || !this.hasMore) return;
       this.page += 1;
       this.fetchNews();
     },
-
-    /* -------- 点击标题 / 图片 -------- */
     handleTitle(item) {
       if (this.activeTab === "60s") {
         this.showDetail(item);
@@ -251,7 +241,7 @@ export default {
   box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3);
 }
 
-/* 内容区（隐藏滚动条） */
+/* 内容区 */
 .content-glass {
   max-width: 1200px;
   margin: 0 auto;
@@ -271,6 +261,20 @@ export default {
   opacity: 0 !important;
 }
 
+/* ****** 整屏切换动画 ****** */
+.fade-slide-enter-active,
+.fade-slide-leave-active {
+  transition: all 0.28s ease-out;
+}
+.fade-slide-enter-from {
+  opacity: 0;
+  transform: translateY(12px) scale(0.98);
+}
+.fade-slide-leave-to {
+  opacity: 0;
+  transform: translateY(-12px) scale(0.98);
+}
+
 /* 瀑布流 */
 .waterfall {
   display: grid;
@@ -284,18 +288,6 @@ export default {
   box-shadow: var(--glass-shadow);
   border: 1px solid var(--glass-border);
   overflow: hidden;
-  animation: drop 0.6s ease-out backwards;
-  animation-delay: var(--delay);
-}
-@keyframes drop {
-  from {
-    opacity: 0;
-    transform: translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 .cover-img {
   width: 100%;
@@ -350,14 +342,14 @@ export default {
   color: #909399;
 }
 
-/* 60 秒图文弹窗 */
+/* 图文弹窗 */
 .detail-dialog {
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(20px);
   border: 1px solid var(--glass-border);
 }
-.detail-img img {
+.detail-img {
   width: 100%;
   border-radius: 12px;
 }
