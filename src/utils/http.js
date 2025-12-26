@@ -3,8 +3,8 @@ import axios from 'axios';
 import { ElMessage } from 'element-plus';
 import router from '../router';
 
-// export const baseHttpUrl = 'http://115.190.91.146:8080'
-export const baseHttpUrl = 'http://localhost:8080'
+export const baseHttpUrl = 'http://115.190.91.146:8080'
+// export const baseHttpUrl = 'http://localhost:8080'
 
 // 创建 Axios 实例
 const http = axios.create({
