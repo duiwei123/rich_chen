@@ -10,6 +10,7 @@ import MarkDownPage from '../views/markDowm/MarkDownPage.vue';
 import MarkDownDetail from '../views/markDowm/MarkDownDetail.vue';
 import MarkDownEdit from '../views/markDowm/MarkDownEdit.vue';
 import MarkDownEdit1 from '../views/markDowm/MarkDownEdit.vue';
+import House from '../views/House.vue';
 import News from '../views/News.vue';
 import { pa } from 'element-plus/es/locales.mjs';
 import component from 'element-plus/es/components/tree-select/src/tree-select-option.mjs';
@@ -78,6 +79,12 @@ const routes = [
     name: 'News',
     component: News
   },
+    {
+    path: '/house',
+    name: 'House',
+    component: House
+  },
+  
 ];
 
 const router = createRouter({

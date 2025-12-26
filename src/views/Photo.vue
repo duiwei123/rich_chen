@@ -269,7 +269,7 @@ const submitForm = async () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 0px;
+  padding: 17px 0px;
   border-radius: 16px;
   background: var(--glass-bg);
   backdrop-filter: blur(10px);

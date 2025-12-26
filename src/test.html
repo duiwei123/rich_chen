@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>手势写字系统</title>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1646424915/hands.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: #000;
+            font-family: Arial, sans-serif;
+        }
+        
+        #video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            transform: scaleX(-1);
+            opacity: 0.3;
+        }
+        
+        #canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            transform: scaleX(-1);
+            cursor: crosshair;
+        }
+        
+        #ui-panel {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            display: none;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+        }
+        
+        .tool-section {
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .tool-button {
+            width: 80px;
+            height: 80px;
+            margin: 10px;
+            border: 3px solid #333;
+            border-radius: 15px;
+            cursor: pointer;
+            display: inline-block;
+            position: relative;
+            transition: all 0.3s;
+        }
+        
+        .tool-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .tool-button.selected {
+            border-color: #4CAF50;
+            box-shadow: 0 0 20px rgba(76, 175, 80, 0.5);
+        }
+        
+        .pen-icon {
+            background: linear-gradient(45deg, #2196F3, #64B5F6);
+            position: relative;
+        }
+        
+        .pen-icon::after {
+            content: '✏️';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 30px;
+        }
+        
+        .eraser-icon {
+            background: linear-gradient(45deg, #FF9800, #FFB74D);
+            position: relative;
+        }
+        
+        .eraser-icon::after {
+            content: '🧹';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 30px;
+        }
+        
+        .color-palette {
+            display: flex;
+            justify-content: center;
+            margin: 10px 0;
+        }
+        
+        .color-option {
+            width: 40px;
+            height: 40px;
+            margin: 5px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: all 0.3s;
+        }
+        
+        .color-option:hover {
+            transform: scale(1.2);
+        }
+        
+        .color-option.selected {
+            border-color: #333;
+            transform: scale(1.2);
+        }
+        
+        .size-slider {
+            width: 200px;
+            margin: 10px auto;
+        }
+        
+        .snowflake {
+            position: absolute;
+            color: white;
+            font-size: 20px;
+            pointer-events: none;
+            animation: fall linear forwards;
+        }
+        
+        @keyframes fall {
+            to {
+                transform: translateY(100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+        
+        .cursor-indicator {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #4CAF50;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 999;
+        }
+    </style>
+</head>
+<body>
+    <video id="video" width="1280" height="720" autoplay></video>
+    <canvas id="canvas" width="1280" height="720"></canvas>
+    
+    <div id="ui-panel">
+        <h2 style="text-align: center; margin-bottom: 30px;">选择工具</h2>
+        
+        <div class="tool-section">
+            <div class="tool-button pen-icon" data-tool="pen"></div>
+            <div class="tool-button eraser-icon" data-tool="eraser"></div>
+        </div>
+        
+        <div class="tool-section">
+            <h3>颜色</h3>
+            <div class="color-palette">
+                <div class="color-option selected" style="background: #FFFFFF" data-color="#FFFFFF"></div>
+                <div class="color-option" style="background: #FF0000" data-color="#FF0000"></div>
+                <div class="color-option" style="background: #00FF00" data-color="#00FF00"></div>
+                <div class="color-option" style="background: #0000FF" data-color="#0000FF"></div>
+                <div class="color-option" style="background: #FFFF00" data-color="#FFFF00"></div>
+                <div class="color-option" style="background: #FF00FF" data-color="#FF00FF"></div>
+            </div>
+        </div>
+        
+        <div class="tool-section">
+            <h3>大小</h3>
+            <input type="range" class="size-slider" min="2" max="50" value="5" id="size-slider">
+            <div id="size-display" style="text-align: center; margin-top: 10px;">5px</div>
+        </div>
+    </div>
+    
+    <div class="cursor-indicator" id="cursor-indicator"></div>
+
+    <script>
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const uiPanel = document.getElementById('ui-panel');
+        const cursorIndicator = document.getElementById('cursor-indicator');
+        
+        let hands = null;
+        let isDrawing = false;
+        let isUIPanelOpen = false;
+        let currentTool = 'pen';
+        let currentColor = '#FFFFFF';
+        let currentSize = 5;
+        let lastPoint = null;
+        let drawings = [];
+        let scale = 1;
+        let rotation = 0;
+        
+        // 初始化摄像头
+        async function initCamera() {
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { width: 1280, height: 720 } 
+            });
+            video.srcObject = stream;
+            return new Promise(resolve => {
+                video.onloadedmetadata = resolve;
+            });
+        }
+        
+        // 初始化MediaPipe
+        function initMediaPipe() {
+            hands = new Hands({
+                locateFile: (file) => {
+                    return `https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1646424915/${file}`;
+                }
+            });
+            
+            hands.setOptions({
+                maxNumHands: 2,
+                modelComplexity: 1,
+                minDetectionConfidence: 0.7,
+                minTrackingConfidence: 0.5
+            });
+            
+            hands.onResults(onResults);
+        }
+        
+        // 处理手势结果
+        function onResults(results) {
+            if (!results.multiHandLandmarks) return;
+            
+            const handsCount = results.multiHandLandmarks.length;
+            
+            // 检测手掌（张开手）
+            if (handsCount >= 1) {
+                const hand = results.multiHandLandmarks[0];
+                if (isPalmOpen(hand)) {
+                    if (!isUIPanelOpen) {
+                        isUIPanelOpen = true;
+                        uiPanel.style.display = 'block';
+                    }
+                }
+            }
+            
+            // UI面板模式
+            if (isUIPanelOpen && handsCount >= 1) {
+                const hand = results.multiHandLandmarks[0];
+                const indexFinger = hand[8];
+                
+                // 使用食指选择UI元素
+                const x = indexFinger.x * canvas.width;
+                const y = indexFinger.y * canvas.height;
+                
+                updateCursor(x, y);
+                handleUISelection(x, y);
+                
+            } else if (!isUIPanelOpen) {
+                // 写字模式
+                if (handsCount === 1) {
+                    const hand = results.multiHandLandmarks[0];
+                    handleDrawing(hand);
+                } else if (handsCount === 2) {
+                    // 双手手势
+                    handleTwoHands(results.multiHandLandmarks);
+                }
+            }
+        }
+        
+        // 检测手掌是否张开
+        function isPalmOpen(hand) {
+            const fingers = [8, 12, 16, 20]; // 指尖索引
+            const palmBase = hand[0];
+            
+            for (let finger of fingers) {
+                if (hand[finger].y > hand[finger - 2].y) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        
+        // 检测食指和拇指是否捏合
+        function isPinching(hand) {
+            const thumb = hand[4];
+            const index = hand[8];
+            
+            const distance = Math.sqrt(
+                Math.pow(thumb.x - index.x, 2) + 
+                Math.pow(thumb.y - index.y, 2)
+            );
+            
+            return distance < 0.05;
+        }
+        
+        // 处理写字
+        function handleDrawing(hand) {
+            if (isPinching(hand)) {
+                const indexFinger = hand[8];
+                const x = indexFinger.x * canvas.width;
+                const y = indexFinger.y * canvas.height;
+                
+                if (!isDrawing) {
+                    isDrawing = true;
+                    lastPoint = { x, y };
+                } else {
+                    drawLine(lastPoint.x, lastPoint.y, x, y);
+                    lastPoint = { x, y };
+                }
+            } else {
+                isDrawing = false;
+                lastPoint = null;
+            }
+        }
+        
+        // 处理双手手势
+        function handleTwoHands(hands) {
+            const hand1 = hands[0];
+            const hand2 = hands[1];
+            
+            // 检测两只手的食指
+            const index1 = hand1[8];
+            const index2 = hand2[8];
+            
+            const distance = Math.sqrt(
+                Math.pow(index1.x - index2.x, 2) + 
+                Math.pow(index1.y - index2.y, 2)
+            );
+            
+            // 缩放功能
+            if (distance > 0.2) {
+                scale = Math.min(2, scale + 0.01);
+            } else {
+                scale = Math.max(0.5, scale - 0.01);
+            }
+            
+            applyTransform();
+            
+            // 检测消散手势（食指和中指同时张开）
+            if (isTwoFingersOpen(hand1) && isTwoFingersOpen(hand2)) {
+                dissolveDrawing();
+            }
+        }
+        
+        // 检测食指和中指是否张开
+        function isTwoFingersOpen(hand) {
+            const index = hand[8];
+            const middle = hand[12];
+            
+            return index.y < hand[6].y && middle.y < hand[10].y;
+        }
+        
+        // 绘制线条
+        function drawLine(x1, y1, x2, y2) {
+            ctx.save();
+            ctx.scale(-1, 1);
+            ctx.translate(-canvas.width, 0);
+            
+            if (currentTool === 'pen') {
+                ctx.globalCompositeOperation = 'source-over';
+                ctx.strokeStyle = currentColor;
+                ctx.lineWidth = currentSize;
+            } else {
+                ctx.globalCompositeOperation = 'destination-out';
+                ctx.lineWidth = currentSize * 3;
+            }
+            
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
+            
+            ctx.restore();
+            
+            // 保存绘制数据
+            drawings.push({
+                x1: x1, y1: y1, x2: x2, y2: y2,
+                tool: currentTool, color: currentColor, size: currentSize
+            });
+        }
+        
+        // 应用变换
+        function applyTransform() {
+            ctx.save();
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.scale(scale, scale);
+            redrawAll();
+            ctx.restore();
+        }
+        
+        // 重绘所有内容
+        function redrawAll() {
+            drawings.forEach(draw => {
+                if (draw.tool === 'pen') {
+                    ctx.globalCompositeOperation = 'source-over';
+                    ctx.strokeStyle = draw.color;
+                    ctx.lineWidth = draw.size;
+                } else {
+                    ctx.globalCompositeOperation = 'destination-out';
+                    ctx.lineWidth = draw.size * 3;
+                }
+                
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                
+                ctx.beginPath();
+                ctx.moveTo(draw.x1, draw.y1);
+                ctx.lineTo(draw.x2, draw.y2);
+                ctx.stroke();
+            });
+        }
+        
+        // 消散效果
+        function dissolveDrawing() {
+            const snowflakes = ['❄', '❅', '❆'];
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            
+            // 创建雪花效果
+            for (let i = 0; i < 50; i++) {
+                setTimeout(() => {
+                    const snowflake = document.createElement('div');
+                    snowflake.className = 'snowflake';
+                    snowflake.textContent = snowflakes[Math.floor(Math.random() * snowflakes.length)];
+                    snowflake.style.left = Math.random() * window.innerWidth + 'px';
+                    snowflake.style.top = -50 + 'px';
+                    snowflake.style.animationDuration = (3 + Math.random() * 2) + 's';
+                    
+                    document.body.appendChild(snowflake);
+                    
+                    setTimeout(() => snowflake.remove(), 5000);
+                }, i * 100);
+            }
+            
+            // 逐渐消失画布内容
+            let opacity = 1;
+            const fadeOut = setInterval(() => {
+                opacity -= 0.02;
+                ctx.globalAlpha = opacity;
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                redrawAll();
+                
+                if (opacity <= 0) {
+                    clearInterval(fadeOut);
+                    ctx.globalAlpha = 1;
+                    drawings = [];
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                }
+            }, 50);
+        }
+        
+        // 更新光标位置
+        function updateCursor(x, y) {
+            cursorIndicator.style.left = x + 'px';
+            cursorIndicator.style.top = y + 'px';
+        }
+        
+        // 处理UI选择
+        function handleUISelection(x, y) {
+            // 这里简化处理，实际应该检测手指在UI元素上的停留时间
+            const buttons = document.querySelectorAll('.tool-button');
+            const colors = document.querySelectorAll('.color-option');
+            
+            // 检测工具选择
+            buttons.forEach(button => {
+                const rect = button.getBoundingClientRect();
+                if (x >= rect.left && x <= rect.right && 
+                    y >= rect.top && y <= rect.bottom) {
+                    button.classList.add('selected');
+                    currentTool = button.dataset.tool;
+                } else {
+                    button.classList.remove('selected');
+                }
+            });
+            
+            // 检测颜色选择
+            colors.forEach(color => {
+                const rect = color.getBoundingClientRect();
+                if (x >= rect.left && x <= rect.right && 
+                    y >= rect.top && y <= rect.bottom) {
+                    color.classList.add('selected');
+                    currentColor = color.dataset.color;
+                } else {
+                    color.classList.remove('selected');
+                }
+            });
+        }
+        
+        // 大小滑块事件
+        document.getElementById('size-slider').addEventListener('input', (e) => {
+            currentSize = e.target.value;
+            document.getElementById('size-display').textContent = currentSize + 'px';
+        });
+        
+        // 主循环
+        async function main() {
+            await initCamera();
+            initMediaPipe();
+            
+            const camera = new Camera(video, {
+                onFrame: async () => {
+                    await hands.send({ image: video });
+                },
+                width: 1280,
+                height: 720
+            });
+            
+            camera.start();
+        }
+        
+        // 启动应用
+        main();
+    </script>
+</body>
+</html>

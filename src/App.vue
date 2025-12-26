@@ -136,8 +136,9 @@ export default {
         // { path: "/order", name: "流水管理" },
         { path: "/photo", name: "菜鸟的地球观察日记" },
         { path: "/messageList", name: "路人甲的待回留言本" },
-        { path: "/markDownPage", name: "小白的碎片笔记手账" },
-        { path: "/news", name:"吃瓜人的日常新闻录"}
+        { path: "/markDownPage", name: "小白的碎片笔记手记" },
+        { path: "/news", name:"吃瓜人的日常新闻录"},
+        { path: "/house", name:"🐂🐎人的一生之敌"},
       ];
     },
   },
