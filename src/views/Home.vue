@@ -127,8 +127,8 @@ export default {
   methods:{
     async getCityName(){
       try{
-        const res = await axios.get("https://qifu-api.baidubce.com/ip/local/geo/v1/district");
-        if(res.data.code==="Success") this.cityName = res.data.data.city;
+        const res = await axios.get("https://api-v3.speedtest.cn/ip");
+        if(res.data.msg==="ok") this.cityName = res.data.data.city;
         else throw new Error(`定位失败:${res.data.message}`);
       }catch(e){
         this.cityName = "北京";
