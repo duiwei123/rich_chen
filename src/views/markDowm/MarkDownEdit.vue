@@ -21,7 +21,7 @@
             :value="category.id"
           ></el-option>
         </el-select>
-        <el-button type="primary" @click="saveArticle">保存草稿</el-button>
+        <!-- <el-button type="primary" @click="saveArticle">保存草稿</el-button> -->
         <el-button type="success" @click="publishArticle">发布文章</el-button>
         <el-button @click="reBuck">返回列表</el-button>
       </div>
